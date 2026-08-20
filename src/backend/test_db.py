@@ -5,7 +5,6 @@ engine = create_engine("sqlite:///test_database.db", echo=True)
 
 def test_creation():
     try:
-
         Base.metadata.create_all(bind=engine)
         print("Successfully created database")
     except Exception as e:
