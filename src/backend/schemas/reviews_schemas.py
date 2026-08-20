@@ -9,7 +9,7 @@ class ReviewBase(BaseModel):
 class ReviewCreate(ReviewBase):
     booking_id: int
 
-class ReviewUpdate(ReviewBase):
+class ReviewUpdate(BaseModel):
     rating: Annotated[Optional[int], Field(ge=1, le=10, default=None)]
     comment: Annotated[Optional[str], Field(default=None)] = None
 

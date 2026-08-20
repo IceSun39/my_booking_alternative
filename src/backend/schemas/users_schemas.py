@@ -13,7 +13,7 @@ class UserCreate(UserBase):
     password: Annotated[str, Field(min_length=1)]
 
 
-class UserUpdate(UserBase):
+class UserUpdate(BaseModel):
     email: Annotated[Optional[str], Field(min_length=1)] = None
     username: Annotated[Optional[str], Field(min_length=1)] = None
     phone_number: Annotated[Optional[str], Field(min_length=1)] = None
