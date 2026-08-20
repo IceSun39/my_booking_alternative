@@ -12,10 +12,12 @@ if TYPE_CHECKING:
     from .favorite import Favorite
     from .review import Review
 
+
 class Role(enum.Enum):
     ADMIN = 1
     USER = 2
     OWNER = 3
+
 
 class User(Base):
     __tablename__ = "users"

@@ -1,4 +1,3 @@
-from backend.models import Property
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Annotated, List, Optional
 
@@ -29,9 +28,3 @@ class RoomResponse(RoomBase):
 class RoomInDB(RoomBase):
     pass
 
-
-class RoomFullResponse(RoomResponse):
-    model_config = ConfigDict(from_attributes=True)
-
-    property: List["PropertyResponse"] = []
-    bookings: List["BookingResponse"] = []
