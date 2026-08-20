@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from .favorite import Favorite
     from .review import Review
 
+
 class Property(Base):
     __tablename__ = "properties"
 
