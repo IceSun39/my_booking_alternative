@@ -16,16 +16,14 @@ class Review(Base):
 
     review_id: Mapped[int] = mapped_column(primary_key=True)
     rating: Mapped[int] = mapped_column(Integer, CheckConstraint("rating >= 1 AND rating <= 10"))
-    comment: Mapped[str | None] = mapped_column(Text)  # Може бути порожнім (NULL)
+    comment: Mapped[str | None] = mapped_column(Text)  
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))
     property_id: Mapped[int] = mapped_column(ForeignKey("properties.property_id"))
 
-    # unique=True гарантує, що до одного бронювання буде лише один відгук
     booking_id: Mapped[int] = mapped_column(ForeignKey("bookings.booking_id"), unique=True)
 
-    # Зв'язки
     user: Mapped["User"] = relationship(back_populates="reviews")
     property: Mapped["Property"] = relationship(back_populates="reviews")
     booking: Mapped["Booking"] = relationship(back_populates="review")
