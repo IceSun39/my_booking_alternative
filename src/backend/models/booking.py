@@ -1,0 +1,31 @@
+from typing import TYPE_CHECKING
+from datetime import date
+from sqlalchemy import ForeignKey, Integer, Float, Date, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from src.backend.database import Base
+
+if TYPE_CHECKING:
+    from .user import User
+    from .room import Room
+    from .review import Review
+
+
+class Booking(Base):
+    __tablename__ = "bookings"
+
+    booking_id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))
+    room_id: Mapped[int] = mapped_column(ForeignKey("rooms.room_id"))
+
+    check_in: Mapped[date] = mapped_column(Date)
+    check_out: Mapped[date] = mapped_column(Date)
+    guests: Mapped[int] = mapped_column(Integer)
+
+    total_price: Mapped[float] = mapped_column(Float)
+    status: Mapped[str] = mapped_column(String, default="pending")
+
+    user: Mapped["User"] = relationship(back_populates="bookings")
+    room: Mapped["Room"] = relationship(back_populates="bookings")
+
+    review: Mapped["Review"] = relationship(back_populates="booking")
