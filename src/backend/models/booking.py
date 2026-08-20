@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING
 from datetime import date
-from sqlalchemy import ForeignKey, Integer, Float, Date, String
+from sqlalchemy import ForeignKey, Integer, Float, Date, String, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+import enum
 
 from src.backend.database import Base
 
@@ -9,6 +10,13 @@ if TYPE_CHECKING:
     from .user import User
     from .room import Room
     from .review import Review
+
+
+class BookingStatus(str, enum.Enum):
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    CANCELLED = "cancelled"
+    COMPLETED = "completed"
 
 
 class Booking(Base):
@@ -23,7 +31,7 @@ class Booking(Base):
     guests: Mapped[int] = mapped_column(Integer)
 
     total_price: Mapped[float] = mapped_column(Float)
-    status: Mapped[str] = mapped_column(String, default="pending")
+    status: Mapped[str] = mapped_column(Enum(BookingStatus))
 
     user: Mapped["User"] = relationship(back_populates="bookings")
     room: Mapped["Room"] = relationship(back_populates="bookings")
