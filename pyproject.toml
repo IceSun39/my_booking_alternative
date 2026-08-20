@@ -1,5 +1,5 @@
 [project]
-name = "booking-analog"
+name = "backend"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -8,11 +8,13 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
+    "asyncpg>=0.31.0",
     "fastapi[standard]>=0.141.1",
+    "sqlalchemy>=2.0.52",
 ]
 
 [project.scripts]
-booking-analog = "booking_analog:main"
+booking-analog = "src.backend:main"
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
