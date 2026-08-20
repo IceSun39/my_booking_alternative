@@ -3,12 +3,6 @@ from typing import Annotated, List, Optional
 from src.backend.models.users import Role
 
 
-class PropertiesResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    user_id: int
-
-
 class UserBase(BaseModel):
     email: Annotated[str, Field(min_length=1)]
     username: Annotated[str, Field(min_length=1)]
