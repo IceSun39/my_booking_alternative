@@ -25,7 +25,7 @@ class UserService:
         user = await self._get_user_in_db(session=session, user_id=user_id)
         return UserResponse.model_validate(user)
 
-    async def add_user(selfself, session: AsyncSession, user_create: UserCreate) -> UserResponse:
+    async def create_user(selfself, session: AsyncSession, user_create: UserCreate) -> UserResponse:
         existing_user = await self._get_user_in_db(session=session, user_id=user_create.user_id)
         if existing_user:
             raise HTTPException(status_code=400, detail="User already exists")
@@ -68,3 +68,8 @@ class UserService:
 
         return None
 
+    async def get_user_by_email(self, session: AsyncSession, email: str) -> Optional[User]:
+        stmt = select(User).where(User.email == email)
+        result = await session.execute(stmt)
+
+        return result.scalar_one_or_none()
