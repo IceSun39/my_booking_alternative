@@ -8,7 +8,7 @@ import enum
 
 if TYPE_CHECKING:
     from .property import Property
-    from .booking import Booking
+    from .bookings import Booking
     from .favorite import Favorite
     from .review import Review
 

@@ -6,7 +6,7 @@ from src.backend.database import Base
 
 if TYPE_CHECKING:
     from .property import Property
-    from .booking import Booking
+    from .bookings import Booking
 
 
 class Room(Base):

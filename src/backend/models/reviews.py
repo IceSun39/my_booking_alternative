@@ -8,7 +8,7 @@ from src.backend.database import Base
 if TYPE_CHECKING:
     from .user import User
     from .property import Property
-    from .booking import Booking
+    from .bookings import Booking
 
 
 class Review(Base):
