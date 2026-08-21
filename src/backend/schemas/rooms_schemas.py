@@ -13,6 +13,7 @@ class RoomCreate(RoomBase):
 
 
 class RoomUpdate(BaseModel):
+    room_id: int
     name: Annotated[Optional[str], Field(min_length=1)] = None
     price: Annotated[Optional[float], Field(gt=0)] = None
     capacity: Annotated[Optional[int], Field(gt=0)] = None

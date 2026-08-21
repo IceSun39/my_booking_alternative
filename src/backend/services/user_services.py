@@ -43,8 +43,8 @@ class UserService:
         await session.refresh(new_user)
         return UserResponse.model_validate(new_user)
 
-    async def update_user(self, session: AsyncSession, user_update: UserUpdate) -> UserResponse:
-        user = await self._get_user_in_db(session=session, user_id=user_update.user_id)
+    async def update_user(self, session: AsyncSession, user_update: UserUpdate, user_id: int) -> UserResponse:
+        user = await self._get_user_in_db(session=session, user_id=user_id)
 
         update_data = user_update.model_dump(exclude_unset=True)
 

@@ -25,7 +25,9 @@ class ReviewService:
         return ReviewResponse.model_validate(existing_review)
 
     async def create_review(self, session: AsyncSession, review_create: ReviewCreate) -> ReviewResponse:
-        existing_review = await self._get_reviews_in_db(session, review.review_id)
+        stmt = select(Review).where(Review.booking_id == review_create.booking_id)
+        result = await session.execute(stmt)
+        existing_review = result.scalar_one_or_none()
         if existing_review:
             raise HTTPException(status_code=400, detail="Review already exists")
 
@@ -37,8 +39,8 @@ class ReviewService:
         await session.refresh(new_review)
         return ReviewResponse.model_validate(new_review)
 
-    async def update_review(self, session: AsyncSession, review_update: ReviewUpdate) -> ReviewResponse:
-        existing_review = await self._get_reviews_in_db(session, review_update.review_id)
+    async def update_review(self, session: AsyncSession, review_update: ReviewUpdate, review_id: int) -> ReviewResponse:
+        existing_review = await self._get_reviews_in_db(session=session, review_id=review_id)
 
         update_data = review_update.model_dump(exclude_unset=True)
 
@@ -50,7 +52,7 @@ class ReviewService:
         return ReviewResponse.model_validate(existing_review)
 
     async def delete_review(self, session: AsyncSession, review_id: int) -> None:
-        existing_review = await self._get_reviews_in_db(session, review_id)
+        existing_review = await self._get_reviews_in_db(session=session, review_id=review_id)
 
         await session.delete(existing_review)
         await session.commit()
