@@ -1,7 +1,12 @@
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Annotated, List, Optional
+from typing import Annotated, List, Optional, TYPE_CHECKING
 from src.backend.models.users import Role
 
+if TYPE_CHECKING:
+    from src.backend.schemas.properties_schemas import PropertiesResponse
+    from src.backend.schemas.booking_schemas import BookingResponse
+    from src.backend.schemas.favorites_schemas import FavoriteResponse
+    from src.backend.schemas.reviews_schemas import ReviewResponse
 
 class UserBase(BaseModel):
     email: Annotated[str, Field(min_length=1)]
@@ -33,7 +38,7 @@ class UserInDB(UserBase):
 
 
 class UserFullResponse(UserResponse):
-    properties: List["PropertyResponse"] = []
+    properties: List["PropertiesResponse"] = []
     bookings: List["BookingResponse"] = []
     favorites: List["FavoriteResponse"] = []
     reviews: List["ReviewResponse"] = []

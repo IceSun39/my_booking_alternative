@@ -1,15 +1,15 @@
 from typing import TYPE_CHECKING
 from datetime import date
-from sqlalchemy import ForeignKey, Integer, Float, Date, String, Enum
+from sqlalchemy import ForeignKey, Integer, Float, Date, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import enum
 
 from src.backend.database import Base
 
 if TYPE_CHECKING:
-    from .user import User
-    from .room import Room
-    from .review import Review
+    from .users import User
+    from .rooms import Room
+    from .reviews import Review
 
 
 class BookingStatus(str, enum.Enum):

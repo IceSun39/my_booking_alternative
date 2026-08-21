@@ -5,8 +5,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.backend.database import Base
 
 if TYPE_CHECKING:
-    from .property import Property
+    from .properties import Property
     from .bookings import Booking
+    from .favorites import Favorite
 
 
 class Room(Base):

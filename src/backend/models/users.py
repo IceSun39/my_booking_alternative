@@ -7,10 +7,10 @@ from src.backend.database import Base
 import enum
 
 if TYPE_CHECKING:
-    from .property import Property
+    from .properties import Property
     from .bookings import Booking
-    from .favorite import Favorite
-    from .review import Review
+    from .favorites import Favorite
+    from .reviews import Review
 
 
 class Role(enum.Enum):

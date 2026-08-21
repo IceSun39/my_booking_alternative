@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
 
 
 class PropertiesBase(BaseModel):

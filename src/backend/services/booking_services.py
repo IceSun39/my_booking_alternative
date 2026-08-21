@@ -1,23 +1,21 @@
-from src.backend.models import Review
 from typing import Optional, List
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
-from fastapi.responses import JSONResponse
-from sqlalchemy.orm import selectinload, session
 
 from src.backend.models import Booking, Room
 from src.backend.schemas.booking_schemas import BookingCreate, BookingUpdate, BookingResponse, BookingBase
-from src.backend.services.room_service import RoomService
+from src.backend.services.rooms_services import RoomService
+from datetime import date
 
 RoomService = RoomService()
 
 
-class BookingService():
+class BookingService:
     async def _get_booking_in_db(self, session: AsyncSession, booking_id: int) -> Optional[Booking]:
         """Метод знаходить бронювання по id"""
-        stmt = select(Booking).where(Booking.id == booking_id)
+        stmt = select(Booking).where(Booking.booking_id == booking_id)
         result = await session.execute(stmt)
         booking = result.scalar_one_or_none()
 
@@ -32,7 +30,7 @@ class BookingService():
             Booking.room_id == room_id,
             check_in < Booking.check_out,
             check_out > Booking.check_in,
-            Booking.booking_id != Booking.id
+            Booking.booking_id != Booking.booking_id
         ).order_by(Booking.check_in.asc())
 
         result = await session.execute(find_bookings)
@@ -83,7 +81,7 @@ class BookingService():
 
         return False
 
-    async def _check_booking_avaible(
+    async def _check_booking_available(
             self,
             session: AsyncSession,
             booking: BookingBase,
@@ -103,7 +101,7 @@ class BookingService():
     async def create_booking(self, session: AsyncSession, booking_create: BookingCreate) -> BookingResponse:
         room = await RoomService._get_room_in_db(session, booking_create.room_id)
 
-        is_available = await self._check_booking_avaible(session, booking_create, room)
+        is_available = await self._check_booking_available(session, booking_create, room)
 
         if not is_available:
             raise HTTPException(
@@ -135,7 +133,7 @@ class BookingService():
 
         room = await RoomService._get_room_in_db(session, room_id)
 
-        is_available = await self._check_booking_avaible(session, booking_to_check, room)
+        is_available = await self._check_booking_available(session, booking_to_check, room)
         if not is_available:
             raise HTTPException(
                 status_code=400,

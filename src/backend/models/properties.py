@@ -5,10 +5,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.backend.database import Base
 
 if TYPE_CHECKING:
-    from .user import User
-    from .room import Room
-    from .favorite import Favorite
-    from .review import Review
+    from .users import User
+    from .rooms import Room
+    from .favorites import Favorite
+    from .reviews import Review
 
 
 class Property(Base):

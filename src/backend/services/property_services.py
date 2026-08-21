@@ -1,10 +1,8 @@
-from backend.models import Review
-from typing import Optional, List
+from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
-from sqlalchemy.orm import selectinload
 
 from src.backend.models.properties import Property
 from src.backend.schemas.properties_schemas import PropertiesCreate, PropertiesUpdate, PropertiesResponse
@@ -12,7 +10,7 @@ from src.backend.schemas.properties_schemas import PropertiesCreate, PropertiesU
 
 class PropertyService:
     async def _get_property_in_db(self, session: AsyncSession, property_id: int) -> Optional[Property]:
-        stmt = select(Property).where(Property.review_id == property_id)
+        stmt = select(Property).where(Property.property_id == property_id)
         result = await session.execute(stmt)
         property = result.scalar_one_or_none()
 
@@ -25,7 +23,7 @@ class PropertyService:
         return PropertiesResponse.model_validate(property)
 
     async def create_property(self, session: AsyncSession, properties_create: PropertiesCreate) -> PropertiesResponse:
-        stmt = select(Property).where(Property.name == properties.name)
+        stmt = select(Property).where(Property.name == properties_create.name)
         result = await session.execute(stmt)
         property = result.scalar_one_or_none()
         if property:

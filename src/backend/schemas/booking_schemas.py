@@ -1,6 +1,6 @@
 from datetime import date
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
 from src.backend.models.bookings import BookingStatus
 
 
@@ -15,11 +15,11 @@ class BookingCreate(BookingBase):
 
 
 class BookingUpdate(BaseModel):
-    check_in: Annotated[Optional[date]] = None
-    check_out: Annotated[Optional[date]] = None
+    check_in: Annotated[Optional[date], Field()] = None
+    check_out: Annotated[Optional[date], Field()] = None
     guests: Annotated[Optional[int], Field(gt=0)] = None
     room_id: Annotated[Optional[int], Field(gt=0)] = None
-    status: Annotated[Optional[BookingStatus]] = None
+    status: Annotated[Optional[BookingStatus], Field()] = None
 
 
 class BookingResponse(BookingBase):

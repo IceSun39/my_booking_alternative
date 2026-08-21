@@ -1,10 +1,8 @@
-from backend.models import Review
-from typing import Optional, List
+from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
-from sqlalchemy.orm import selectinload
 
 from src.backend.models.reviews import Review
 from src.backend.schemas.reviews_schemas import ReviewCreate, ReviewUpdate, ReviewResponse

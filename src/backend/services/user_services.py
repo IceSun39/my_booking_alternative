@@ -1,18 +1,17 @@
-from typing import Optional, List
+from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
-from sqlalchemy.orm import selectinload
 
 from src.backend.models.users import User
-from src.backend.schemas.users_schemas import UserCreate, UserInDB, UserUpdate, UserFullResponse, UserResponse
+from src.backend.schemas.users_schemas import UserCreate, UserUpdate, UserResponse
 from src.backend.core.security import get_password_hash
 
 
 class UserService:
     async def _get_user_in_db(self, session: AsyncSession, user_id: int) -> Optional[User]:
-        stmt = select(User).where(User.id == user_id)
+        stmt = select(User).where(User.user_id == user_id)
         result = await session.execute(stmt)
         user = result.scalar_one_or_none()
 
@@ -50,7 +49,7 @@ class UserService:
 
         if "password" in update_data:
             raw_password = update_data.pop("password")
-            hashed_password = get_password_hash(raw_password)
+            user.password = get_password_hash(raw_password)
 
         for key, value in update_data.items():
             setattr(user, key, value)

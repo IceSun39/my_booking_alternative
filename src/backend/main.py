@@ -4,5 +4,5 @@ from fastapi import FastAPI
 from src.backend.routes.auth import auth_router
 
 load_dotenv()
-app = FastAPI()
+app = FastAPI(debug=os.getenv("DEBUG", "False").lower() == "true")
 app.include_router(auth_router)

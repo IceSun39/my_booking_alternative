@@ -1,11 +1,11 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
 
 
 class ReviewBase(BaseModel):
     comment: Annotated[Optional[str], Field(default=None)] = None
-    rating: Annotated[int, Fielld(ge=1, le=10)]
+    rating: Annotated[int, Field(ge=1, le=10)]
 
 
 class ReviewCreate(ReviewBase):
