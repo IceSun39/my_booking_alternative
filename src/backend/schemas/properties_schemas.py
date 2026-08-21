@@ -13,9 +13,9 @@ class PropertiesCreate(PropertiesBase):
 
 
 class PropertiesUpdate(PropertiesBase):
-    name: Annotated[Optional[str], Field(min_length=1)]
-    address: Annotated[Optional[str], Field(min_length=1)]
-    description: Annotated[Optional[str], Field(min_length=1)]
+    name: Annotated[Optional[str], Field(min_length=1)] = None
+    address: Annotated[Optional[str], Field(min_length=1)] = None
+    description: Annotated[Optional[str], Field(min_length=1)] = None
 
 
 class PropertiesResponse(PropertiesBase):
