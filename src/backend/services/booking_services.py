@@ -1,5 +1,4 @@
-from backend.models import Review
-from backend.services.rooms_services import RoomService
+from src.backend.models import Review
 from typing import Optional, List
 
 from sqlalchemy import select
@@ -32,7 +31,8 @@ class BookingService():
         find_bookings = select(Booking).where(
             Booking.room_id == room_id,
             check_in < Booking.check_out,
-            check_out > Booking.check_in
+            check_out > Booking.check_in,
+            Booking.booking_id != Booking.id
         ).order_by(Booking.check_in.asc())
 
         result = await session.execute(find_bookings)
@@ -47,34 +47,38 @@ class BookingService():
         bookings = await self._find_all_bookings_for_room(session, room.room_id, booking.check_in, booking.check_out)
 
         # Якщо записів немає, то нічого заважати і не може
-        if bookings is None:
+        if not bookings:
             return True
-        total_days = (check_out - check_in).days
-        guests = list(range(0, total_days))
-        capacity, booking_guest = room.capacity, booking.guests
+        total_days = (booking.check_out - booking.check_in).days
+        # Створюємо масив із нулів для кожного дня нашого проживання
+        guests_per_day = [0] * total_days
 
-        # Головний цикл, рахуємо скільки кожного дня буде гостей
         for books in bookings:
-            start_day = total_days - (check_out - books.check_in).days
-            end_day = -(check_in - books.check_out).days
-            end_day = end_day if end_day < total_days else total_days
-            for i in range(start_day, end_day):
-                guests[i] += books.guests
+            # Індекс початку: якщо вони заїхали раніше за нас, то для нас вони є з 0-го дня
+            start_day = max(0, (books.check_in - booking.check_in).days)
 
-        # Якщо хоч в один день всі не влазять у кімнату, то місць немає
-        for guest in guests:
-            if capacity - guest <= booking_guest:
-                return False
+            # Індекс кінця: якщо вони виїжджають пізніше за нас, обрізаємо по наш останній день
+            end_day = min(total_days, (books.check_out - booking.check_in).days)
+
+            # Додаємо кількість гостей для кожного дня перетину
+            for i in range(start_day, end_day):
+                guests_per_day[i] += books.guests
+
+        # Перевіряємо, чи вистачить місця для нових гостей у КОЖЕН із днів
+        for current_guests in guests_per_day:
+            if room.capacity - current_guests < booking.guests:
+                return False  # Знайшли день, коли місць не вистачає
+
         return True
 
     # Метод перевіряє чи вільна кімната ГОТЕЛЮ
     async def _check_booking_dates_for_hotel_rooms(self, session: AsyncSession, booking: BookingBase,
                                                    room: Room) -> bool:
         """Метод перевіряє чи кімната пуста в задані дати"""
-        bookings = await self._find_all_bookings_for_room(session, room.room_id, booking.check_in, booking.check_outz)
+        bookings = await self._find_all_bookings_for_room(session, room.room_id, booking.check_in, booking.check_out)
 
         # Якщо в кімнати взагалі немає записів, то ласкаво просимо
-        if bookings is None:
+        if not bookings:
             return True
 
         return False
@@ -85,10 +89,10 @@ class BookingService():
             booking: BookingBase,
             room: Room) -> bool:
         """Перевіряє чи вільна кімната для запису"""
-        room = RoomService._get_room_in_db(session, room_id)
-        # Якщо кімната типу хостела
+
         if room.is_contains_several_groups:
             return await self._check_booking_dates_for_hostel_rooms(session, booking, room)
+
         # Якщо кімната готельного типу
         return await self._check_booking_dates_for_hotel_rooms(session, booking, room)
 
@@ -96,14 +100,16 @@ class BookingService():
         booking = await self._get_booking_in_db(session, booking_id)
         return BookingResponse.model_validate(booking)
 
-    async def create_booking(self, booking_create: BookingCreate) -> BookingResponse:
-        room = RoomService._get_room_in_db(session, booking_create.room_id)
+    async def create_booking(self, session: AsyncSession, booking_create: BookingCreate) -> BookingResponse:
+        room = await RoomService._get_room_in_db(session, booking_create.room_id)
 
-        if not self._check_booking_avaible(session, booking_create, room):
-            return JSONResponse(content={
-                "status": "error",
-                "message": "Not enough room"
-            })
+        is_available = await self._check_booking_avaible(session, booking_create, room)
+
+        if not is_available:
+            raise HTTPException(
+                status_code=400,
+                detail="Not enough room available for these dates"
+            )
 
         booking_data = booking_create.model_dump()
         new_booking = Booking(**booking_data)
@@ -111,6 +117,7 @@ class BookingService():
         session.add(new_booking)
         await session.commit()
         await session.refresh(new_booking)
+
         return BookingResponse.model_validate(new_booking)
 
     async def update_booking(self, session: AsyncSession, booking_update: BookingUpdate,
@@ -119,19 +126,21 @@ class BookingService():
 
         update_data = booking_update.model_dump(exclude_unset=True)
 
+        check_in = update_data.get("check_in", existing_booking.check_in)
+        check_out = update_data.get("check_out", existing_booking.check_out)
+        guests = update_data.get("guests", existing_booking.guests)
+        room_id = update_data.get("room_id", existing_booking.room_id)
 
-        check_in = update_data["check_in"] if update_data["check_in"] else existing_booking.check_in
-        check_out = update_data["check_out"] if update_data["check_out"] else existing_booking.check_out
-        guests = update_data["guests"] if update_data["guests"] else existing_booking.guests
-        room_id = update_data["room_id"] if update_data["room_id"] else existing_booking.room_id
-        booking = BookingBase(check_in=check_in, check_out=check_out, guests=guests)
-        room = RoomService._get_room_in_db(session, room_id)
+        booking_to_check = BookingBase(check_in=check_in, check_out=check_out, guests=guests)
 
-        if not self._check_booking_avaible(session, booking, room):
-            return JSONResponse(content={
-                "status": "error",
-                "message": "Not enough room"
-            })
+        room = await RoomService._get_room_in_db(session, room_id)
+
+        is_available = await self._check_booking_avaible(session, booking_to_check, room)
+        if not is_available:
+            raise HTTPException(
+                status_code=400,
+                detail="Not enough room available for these dates"
+            )
 
         for key, value in update_data.items():
             setattr(existing_booking, key, value)
@@ -147,5 +156,3 @@ class BookingService():
         await session.commit()
 
         return None
-
-    
