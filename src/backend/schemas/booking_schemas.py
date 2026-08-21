@@ -18,6 +18,7 @@ class BookingUpdate(BaseModel):
     check_in: Annotated[Optional[date]] = None
     check_out: Annotated[Optional[date]] = None
     guests: Annotated[Optional[int], Field(gt=0)] = None
+    room_id: Annotated[Optional[int], Field(gt=0)] = None
     status: Annotated[Optional[BookingStatus]] = None
 
 

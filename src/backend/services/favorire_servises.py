@@ -11,7 +11,7 @@ from src.backend.schemas.favorites_schemas import FavoriteCreate, FavoriteRespon
 
 class FavoriteService:
     async def _get_favorite_in_db(self, session: AsyncSession, property_id: int, user_id, room_id:int) -> Optional[Favorite]:
-        stmt = select(Favorite).where(Favorite.user_id == user_id and Favorite.property_id == property_id and Favorite.room_id == room_id)
+        stmt = select(Favorite).where(Favorite.user_id == user_id, Favorite.property_id == property_id, Favorite.room_id == room_id)
         result = await session.execute(stmt)
         favorite = result.scalar_one_or_none()
         return favorite
@@ -22,7 +22,7 @@ class FavoriteService:
         return result.scalars().all()
 
     async def create_favorite(self,session: AsyncSession, user_id: int, favorite_create: FavoriteCreate) -> dict:
-        favorite = self._get_favorite_in_db(session, user_id, favorite_create.property_id, favorite_create.room_id)
+        favorite = await self._get_favorite_in_db(session, user_id, favorite_create.property_id, favorite_create.room_id)
         if favorite:
             return {"Message": "Favorite already exists", "status": 200}
 

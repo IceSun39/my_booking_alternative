@@ -24,7 +24,7 @@ class RoomService:
         return RoomResponse.model_validate(existing_room)
 
     async def create_room(self, session: AsyncSession, room_create: RoomCreate, name: str) -> RoomResponse:
-        stmt = select(Room).where(Room.name == name and Room.property_id == room_create.property_id)
+        stmt = select(Room).where(Room.name == name, Room.property_id == room_create.property_id)
         result = await session.execute(stmt)
         existing_room = result.scalar_one_or_none()
         if existing_room:
