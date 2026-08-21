@@ -2,6 +2,7 @@ from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from fastapi import HTTPException
 
 from src.backend.models.rooms import Room
@@ -10,7 +11,7 @@ from src.backend.schemas.rooms_schemas import RoomResponse, RoomCreate, RoomUpda
 
 class RoomService:
     async def _get_room_in_db(self, session: AsyncSession, room_id: int) -> Optional[Room]:
-        stmt = select(Room).where(Room.room_id == room_id)
+        stmt = select(Room).where(Room.room_id == room_id).options(selectinload(Room.amenities))
         result = await session.execute(stmt)
         room = result.scalar_one_or_none()
 
@@ -18,12 +19,19 @@ class RoomService:
             raise HTTPException(status_code=404, detail="Room not found")
         return room
 
+    # Нехай буде якщо session.refresh не буде працювати
+    async def _refresh_room_in_db(self, session: AsyncSession, room_id: int) -> Room:
+        stmt = select(Room).where(Room.room_id == room_id).options(selectinload(Room.amenities))
+        result = await session.execute(stmt)
+        room = result.scalar_one_or_none()
+        return room
+
     async def get_room(self, session: AsyncSession, room_id: int) -> RoomResponse:
         existing_room = await self._get_room_in_db(session, room_id)
         return RoomResponse.model_validate(existing_room)
 
     async def create_room(self, session: AsyncSession, room_create: RoomCreate, name: str) -> RoomResponse:
-        stmt = select(Room).where(Room.name == name, Room.property_id == room_create.property_id)
+        stmt = select(Room).where(Room.name == name, Room.property_id == room_create.property_id).options(selectinload(Room.amenities))
         result = await session.execute(stmt)
         existing_room = result.scalar_one_or_none()
         if existing_room:
