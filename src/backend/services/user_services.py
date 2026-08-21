@@ -1,4 +1,3 @@
-from pwdlib.hashers import bcrypt
 from typing import Optional, List
 
 from sqlalchemy import select
@@ -8,7 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from src.backend.models.users import User
 from src.backend.schemas.users_schemas import UserCreate, UserInDB, UserUpdate, UserFullResponse, UserResponse
-from src.core.security import get_password_hash
+from src.backend.core.security import get_password_hash
 
 
 class UserService:
@@ -25,8 +24,8 @@ class UserService:
         user = await self._get_user_in_db(session=session, user_id=user_id)
         return UserResponse.model_validate(user)
 
-    async def create_user(selfself, session: AsyncSession, user_create: UserCreate) -> UserResponse:
-        existing_user = await self._get_user_in_db(session=session, user_id=user_create.user_id)
+    async def create_user(self, session: AsyncSession, user_create: UserCreate) -> UserResponse:
+        existing_user = await self.get_user_by_email(session=session, email=user_create.email)
         if existing_user:
             raise HTTPException(status_code=400, detail="User already exists")
 
@@ -41,7 +40,7 @@ class UserService:
 
         session.add(new_user)
         await session.commit()
-        await session.refresh()
+        await session.refresh(new_user)
         return UserResponse.model_validate(new_user)
 
     async def update_user(self, session: AsyncSession, user_update: UserUpdate) -> UserResponse:
@@ -57,7 +56,7 @@ class UserService:
             setattr(user, key, value)
 
         await session.commit()
-        await session.refresh()
+        await session.refresh(user)
         return UserResponse.model_validate(user)
 
     async def delete_user(self, session: AsyncSession, user_id: int) -> None:

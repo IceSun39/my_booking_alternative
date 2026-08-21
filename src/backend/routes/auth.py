@@ -27,7 +27,7 @@ async def register_user(user_data: UserCreate, session: AsyncSession = Depends(g
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    new_user = UserService.create_user(session, user_data)
+    new_user = await UserService.create_user(session, user_data)
     return new_user
 
 

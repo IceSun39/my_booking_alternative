@@ -1,7 +1,7 @@
 from datetime import date
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Annotated, List, Optional
-from src.backend.models.booking import BookingStatus
+from src.backend.models.bookings import BookingStatus
 
 
 class BookingBase(BaseModel):
