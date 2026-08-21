@@ -21,3 +21,4 @@ class Room(Base):
 
     property: Mapped["Property"] = relationship(back_populates="rooms")
     bookings: Mapped[List["Booking"]] = relationship(back_populates="room")
+    favorites: Mapped[List["Favorite"]] = relationship(back_populates="room")

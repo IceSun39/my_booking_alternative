@@ -13,6 +13,8 @@ class Favorite(Base):
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), primary_key=True)
     property_id: Mapped[int] = mapped_column(ForeignKey("properties.property_id"), primary_key=True)
+    room_id: Mapped[int] = mapped_column(ForeignKey("rooms.room_id"), primary_key=True)
 
     user: Mapped["User"] = relationship(back_populates="favorites")
     property: Mapped["Property"] = relationship(back_populates="favorites")
+    room: Mapped["Room"] = relationship(back_populates="favorites")
