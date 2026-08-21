@@ -22,6 +22,8 @@ class UserUpdate(BaseModel):
 
 
 class UserResponse(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+
     user_id: int
     role: Role
 

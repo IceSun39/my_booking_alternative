@@ -25,7 +25,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None, refresh: bo
     to_encode.update({"exp": expire})
     to_encode.update({'jti': str(uuid.uuid4())})
     to_encode.update({'refresh': refresh})
-    encoded_jwt = jwt.encode(payload=to_encode, key=SECRET_KEY, algorithm=[ALGORITHM])
+    encoded_jwt = jwt.encode(payload=to_encode, key=SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 def decode_token(token: str) -> dict:
