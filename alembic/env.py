@@ -14,6 +14,8 @@ from src.backend.models.rooms import Room
 from src.backend.models.favorites import Favorite
 from src.backend.models.users import User
 from src.backend.models.properties import Property
+from src.backend.models.amenities import Amenity
+from src.backend.models.associations.room_amenities import room_amenities
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
