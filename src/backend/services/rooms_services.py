@@ -20,11 +20,11 @@ class RoomService:
         return room
 
     async def get_room(self, session: AsyncSession, room_id: int) -> RoomResponse:
-        existing_room = self._get_room_in_db(room_id)
+        existing_room = await self._get_room_in_db(room_id)
         return RoomResponse.model_validate(existing_room)
 
     async def create_room(self, session: AsyncSession, room_create: RoomCreate) -> RoomResponse:
-        existing_room = self._get_room_in_db(room.id)
+        existing_room = await self._get_room_in_db(room.id)
         if existing_room:
             raise HTTPException(status_code=400, detail="Room already exists")
 
@@ -39,7 +39,7 @@ class RoomService:
         return RoomResponse.model_validate(new_room)
 
     async def update_room(self, session: AsyncSession, room_update: RoomUpdate) -> RoomResponse:
-        existing_room = self._get_room_in_db(room_update.id)
+        existing_room = await self._get_room_in_db(room_update.id)
 
         update_data = room_update.model_dump(exclude_unset=True)
 
@@ -51,7 +51,7 @@ class RoomService:
         return RoomResponse.model_validate(existing_room)
 
     async def delete_room(self, session: AsyncSession, room_id: int) -> None:
-        existing_room = self._get_room_in_db(room_id)
+        existing_room = await self._get_room_in_db(room_id)
 
         await session.delete(existing_room)
         await session.commit()
