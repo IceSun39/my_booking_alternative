@@ -49,7 +49,6 @@ class ReviewService:
         await session.refresh(existing_review)
         return ReviewResponse.model_validate(existing_review)
 
-
     async def delete_review(self, session: AsyncSession, review_id: int) -> None:
         existing_review = await self._get_reviews_in_db(session, review_id)
 
