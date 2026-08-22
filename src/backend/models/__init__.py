@@ -1,5 +1,5 @@
 from src.backend.database import Base
-from .users import User
+from .users import User, Role
 from .properties import Property
 from .rooms import Room
 from .bookings import Booking

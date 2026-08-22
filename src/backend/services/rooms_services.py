@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException
 
-from src.backend.models.rooms import Room
+from src.backend.models import Room, Property
 from src.backend.schemas.rooms_schemas import RoomResponse, RoomCreate, RoomUpdate
 
 
@@ -26,12 +26,30 @@ class RoomService:
         room = result.scalar_one_or_none()
         return room
 
+    async def check_user_is_owner_by_room(self, session: AsyncSession, room_id:int, owner_id: int) -> bool:
+        stmt = select(Property).join(Property.rooms).where(Room.room_id == room_id)
+        result = await session.execute(stmt)
+        property = result.scalar_one_or_none()
+
+        if property is None:
+            return False
+        return property.owner_id == owner_id
+
+    async def check_user_is_owner_by_property(self, session: AsyncSession, property_id: int, owner_id: int) -> bool:
+        stmt = select(Property).where(Property.property_id == property_id)
+        result = await session.execute(stmt)
+        property = result.scalar_one_or_none()
+
+        if property is None:
+            return False
+        return property.owner_id == owner_id
+
     async def get_room(self, session: AsyncSession, room_id: int) -> RoomResponse:
         existing_room = await self._get_room_in_db(session, room_id)
         return RoomResponse.model_validate(existing_room)
 
-    async def create_room(self, session: AsyncSession, room_create: RoomCreate, name: str) -> RoomResponse:
-        stmt = select(Room).where(Room.name == name, Room.property_id == room_create.property_id).options(selectinload(Room.amenities))
+    async def create_room(self, session: AsyncSession, room_create: RoomCreate) -> RoomResponse:
+        stmt = select(Room).where(Room.name == room_create.name, Room.property_id == room_create.property_id).options(selectinload(Room.amenities))
         result = await session.execute(stmt)
         existing_room = result.scalar_one_or_none()
         if existing_room:
