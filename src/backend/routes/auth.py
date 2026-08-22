@@ -1,10 +1,10 @@
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.backend.core.security import create_access_token, verify_password
+from src.backend.core.security import create_access_token, verify_password, decode_token
 from src.backend.services.user_services import UserService
 from src.backend.schemas.users_schemas import UserResponse, UserCreate
 from src.backend.database.database import get_session
@@ -14,7 +14,7 @@ auth_router = APIRouter(
     tags=["auth"]
 )
 
-REFRESH_TOKEN_EXPIRE_DAYS = 2
+REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 UserService = UserService()
 
@@ -55,5 +55,41 @@ async def login_user(form_data: OAuth2PasswordRequestForm = Depends(),
                 "email": user.email,
                 "user_id": str(user.user_id)
             }
+        }
+    )
+
+
+@auth_router.post("/refresh", status_code=status.HTTP_200_OK)
+async def refresh_access_token(refresh_token: str = Header(..., alias="Authorization"),
+                               session: AsyncSession = Depends(get_session)):
+    token = refresh_token.replace('Bearer', '')
+    token_data = decode_token(token)
+
+    if not token_data.get("refresh"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect refresh token"
+        )
+
+    email = token_data.get("sub")
+    user = await UserService.get_user_by_email(session, email)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
+        )
+
+    new_access_token = create_access_token(data={'sub': user.email})
+    new_refresh_token = create_access_token(
+        data={'sub': user.email},
+        refresh=True,
+        expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    )
+
+    return JSONResponse(
+        content={
+            "access_token": new_access_token,
+            "refresh_token": new_refresh_token,
+            "token_type": "bearer",
         }
     )

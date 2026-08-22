@@ -1,5 +1,3 @@
-import os
-from dotenv import load_dotenv
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from starlette import status
@@ -10,13 +8,9 @@ from src.backend.core.security import decode_token
 from src.backend.services.user_services import UserService
 from src.backend.models.users import User, Role
 
-load_dotenv()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
 UserService = UserService()
-
 
 async def get_current_user(token: str = Depends(oauth2_scheme),
                            session: AsyncSession = Depends(get_session)) -> User:
