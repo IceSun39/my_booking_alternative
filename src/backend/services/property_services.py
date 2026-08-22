@@ -1,3 +1,4 @@
+from sqlalchemy.orm import selectinload
 from typing import Optional, List
 
 from sqlalchemy import select
@@ -10,7 +11,7 @@ from src.backend.schemas.properties_schemas import PropertiesCreate, PropertiesU
 
 class PropertyService:
     async def _get_property_in_db(self, session: AsyncSession, property_id: int) -> Optional[Property]:
-        stmt = select(Property).where(Property.property_id == property_id)
+        stmt = select(Property).where(Property.property_id == property_id).options(selectinload(Property.amenities))
         result = await session.execute(stmt)
         property = result.scalar_one_or_none()
 
@@ -19,7 +20,7 @@ class PropertyService:
         return property
 
     async def get_all_properties(self, session: AsyncSession) -> List[Property]:
-        stmt = select(Property)
+        stmt = select(Property).options(selectinload(Property.amenities))
         result = await session.execute(stmt)
         property = result.scalars().all()
         return property
@@ -29,7 +30,7 @@ class PropertyService:
         return PropertiesResponse.model_validate(property)
 
     async def create_property(self, session: AsyncSession, properties_create: PropertiesCreate) -> PropertiesResponse:
-        stmt = select(Property).where(Property.name == properties_create.name)
+        stmt = select(Property).where(Property.name == properties_create.name).options(selectinload(Property.amenities))
         result = await session.execute(stmt)
         property = result.scalar_one_or_none()
         if property:

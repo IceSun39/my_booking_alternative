@@ -1,0 +1,2 @@
+from .property_amenities import property_amenities
+from .room_amenities import room_amenities

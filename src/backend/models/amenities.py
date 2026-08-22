@@ -1,8 +1,7 @@
-from sqlalchemy import Integer, String, Table, ForeignKey
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.backend.database.database import Base
-from src.backend.models.associations.room_amenities import room_amenities
-
+from src.backend.models.associations import property_amenities, room_amenities
 class Amenity(Base):
     __tablename__ = "amenities"
 
@@ -11,3 +10,4 @@ class Amenity(Base):
     description: Mapped[str] = mapped_column(String,nullable=True)
 
     rooms = relationship("Room", secondary=room_amenities, back_populates="amenities")
+    properties = relationship("Property", secondary=property_amenities, back_populates="amenities")

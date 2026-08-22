@@ -3,12 +3,14 @@ from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.backend.database import Base
+from src.backend.models.associations import property_amenities
 
 if TYPE_CHECKING:
     from .users import User
     from .rooms import Room
     from .favorites import Favorite
     from .reviews import Review
+    from .amenities import Amenity
 
 
 class Property(Base):
@@ -24,3 +26,4 @@ class Property(Base):
     rooms: Mapped[List["Room"]] = relationship(back_populates="property")
     favorites: Mapped[List["Favorite"]] = relationship(back_populates="property")
     reviews: Mapped[List["Review"]] = relationship(back_populates="property")
+    amenities: Mapped[List["Amenity"]] = relationship("Amenity",secondary=property_amenities,back_populates="properties")
