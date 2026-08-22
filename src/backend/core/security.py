@@ -3,6 +3,7 @@ import os
 
 import jwt
 from dotenv import load_dotenv
+from fastapi import HTTPException
 from pwdlib import PasswordHash
 import uuid
 import logging
@@ -35,19 +36,14 @@ def decode_token(token: str) -> dict:
     except jwt.ExpiredSignatureError:
         logging.error("Expired token")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=401,
             detail="Token expired",
         )
     except jwt.InvalidTokenError:
         logging.error("Invalid token")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=401,
             detail="Invalid token",
         )
-    except jwt.DecodeError:
-        logging.error("Invalid token")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-        )
+
 
