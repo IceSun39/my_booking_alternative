@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 
 from src.backend.models import Booking, Room
-from src.backend.schemas.booking_schemas import BookingCreate, BookingUpdate, BookingResponse, BookingBase
+from src.backend.schemas.bookings_schemas import BookingCreate, BookingUpdate, BookingResponse, BookingBase
 from src.backend.services.rooms_services import RoomService
 from datetime import date
 

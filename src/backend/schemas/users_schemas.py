@@ -4,7 +4,7 @@ from src.backend.models.users import Role
 
 if TYPE_CHECKING:
     from src.backend.schemas.properties_schemas import PropertiesResponse
-    from src.backend.schemas.booking_schemas import BookingResponse
+    from src.backend.schemas.bookings_schemas import BookingResponse
     from src.backend.schemas.favorites_schemas import FavoriteResponse
     from src.backend.schemas.reviews_schemas import ReviewResponse
 
