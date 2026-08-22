@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from src.backend.schemas.favorites_schemas import FavoriteResponse
     from src.backend.schemas.reviews_schemas import ReviewResponse
 
+
 class UserBase(BaseModel):
     email: Annotated[str, Field(min_length=1)]
     username: Annotated[str, Field(min_length=1)]
@@ -16,7 +17,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: Annotated[str, Field(min_length=1)]
-    role: Role
+    role: Annotated[Role, Field(default=Role.USER)]
 
 
 class UserUpdate(BaseModel):
