@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 
-from src.backend.models.reviews import Review
+from src.backend.models import Review, Booking
 from src.backend.schemas.reviews_schemas import ReviewCreate, ReviewUpdate, ReviewResponse
 
 
@@ -17,6 +17,21 @@ class ReviewService:
         if review is None:
             raise HTTPException(status_code=404, detail="Review not found")
         return review
+
+    async def get_property_reviews(self, session: AsyncSession, property_id:int) -> List[ReviewResponse]:
+        stmt = select(Review).where(Review.property_id == property_id)
+        result = await session.execute(stmt)
+        reviews = result.scalars().all()
+
+        return [ReviewResponse.model_validate(review) for review in reviews]
+
+
+    async def get_room_reviews(self, session: AsyncSession, room_id: int) -> List[ReviewResponse]:
+        stmt = select(Review).join(Booking).where(Booking.room_id == room_id)
+        result = await session.execute(stmt)
+        reviews = result.scalars().all()
+
+        return [ReviewResponse.model_validate(review) for review in reviews]
 
     async def get_review(self, session: AsyncSession, review_id: int) -> ReviewResponse:
         existing_review = await self._get_reviews_in_db(session, review_id)

@@ -9,7 +9,7 @@ from src.backend.database.database import get_session
 from src.backend.core.dependencies import get_current_user, get_owner_or_admin_user
 
 room_router = APIRouter(
-    prefix="/room",
+    prefix="/api/room",
     tags=["Room"],
 )
 
@@ -69,8 +69,4 @@ async def update_room(room: RoomUpdate, room_id: int, session: AsyncSession = De
 async def delete_room(room_id: int, session: AsyncSession = Depends(get_session),
                       current_user: User = Depends(get_owner_or_admin_user)):
     if await check_user_is_room_owner(session=session, room_id=room_id, current_user=current_user):
-        return await RoomService.delete_room(session=session, room_id=room_id)
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="You do not have permission to perform this action"
-    )
+        await RoomService.delete_room(session=session, room_id=room_id)
