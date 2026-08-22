@@ -1,4 +1,4 @@
-from _datetime import datetime
+import datetime
 
 from backend.models import User
 from fastapi import APIRouter, Depends, status, HTTPException

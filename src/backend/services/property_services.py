@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +16,12 @@ class PropertyService:
 
         if property is None:
             raise HTTPException(status_code=404, detail="Property not found")
+        return property
+
+    async def get_all_properties(self, session: AsyncSession) -> List[Property]:
+        stmt = select(Property)
+        result = await session.execute(stmt)
+        property = result.scalars().all()
         return property
 
     async def get_property(self, session: AsyncSession, property_id: int) -> PropertiesResponse:
@@ -37,7 +43,8 @@ class PropertyService:
         await session.refresh(new_property)
         return PropertiesResponse.model_validate(new_property)
 
-    async def update_property(self, session: AsyncSession, properties_update: PropertiesUpdate, property_id: int) -> PropertiesResponse:
+    async def update_property(self, session: AsyncSession, properties_update: PropertiesUpdate,
+                              property_id: int) -> PropertiesResponse:
         existing_property = await self._get_property_in_db(session=session, property_id=property_id)
 
         update_data = properties_update.model_dump(exclude_unset=True)
