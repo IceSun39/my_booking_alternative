@@ -1,5 +1,5 @@
 from backend.models import User
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.backend.services import PropertyService

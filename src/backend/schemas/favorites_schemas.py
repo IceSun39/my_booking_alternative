@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict
 
 class FavoriteCreate(BaseModel):
     property_id: int
-    room_id: int
+    room_id: int | None
 
 
 class FavoriteResponse(BaseModel):
