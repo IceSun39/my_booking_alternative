@@ -1,6 +1,3 @@
-from backend.models import bookings
-from functools import total_ordering
-
 from typing import Optional, List
 
 from sqlalchemy import select

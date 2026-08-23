@@ -1,4 +1,4 @@
-from backend.models import AmenityType
+from src.backend.models import AmenityType
 from fastapi import APIRouter, Depends, status, Query, Path, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
@@ -89,7 +89,7 @@ async def update_property_amenities(
         owner_id=current_user.user_id
     )
 
-    if not is_owner or current_user.role != Role.ADMIN:
+    if not is_owner and current_user.role != Role.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to perform this action"
@@ -115,7 +115,7 @@ async def update_room_amenities(
         owner_id=current_user.user_id
     )
 
-    if not is_owner or current_user.role != Role.ADMIN:
+    if not is_owner and current_user.role != Role.ADMIN:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="You do not have permission to perform this action")
 

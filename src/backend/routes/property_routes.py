@@ -1,4 +1,4 @@
-from backend.models import User, Role
+from src.backend.models import User, Role
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.backend.core.dependencies import get_owner_or_admin_user
@@ -72,7 +72,7 @@ async def update_property(
     )
 
 
-@properties_router.delete("/{property_id}", response_model=PropertiesResponse, status_code=204)
+@properties_router.delete("/{property_id}", status_code=204)
 async def delete_property(
         property_id: int,
         session: AsyncSession = Depends(get_session),

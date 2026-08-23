@@ -1,4 +1,4 @@
-from backend.models import User
+from src.backend.models import User
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 

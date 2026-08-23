@@ -58,7 +58,7 @@ class AmenityServices:
         stmt = select(Amenity).options(selectinload(Amenity.properties))
 
         if amenity_type:
-            stmt = stmt.where(Amenity.type._in([amenity_type, AmenityType.BOTH]))
+            stmt = stmt.where(Amenity.type.in_([amenity_type, AmenityType.BOTH]))
 
         result = await session.execute(stmt)
         amenities = result.scalars().all()
@@ -123,8 +123,8 @@ class AmenityServices:
         new_amenities = []
         if amenity_ids:
             stmt_am = select(Amenity).where(
-                Amenity.amenity_id._in(amenity_ids),
-                Amenity.type._in([AmenityType.PROPERTY, AmenityType.BOTH]),
+                Amenity.amenity_id.in_(amenity_ids),
+                Amenity.type.in_([AmenityType.PROPERTY, AmenityType.BOTH]),
             ).options(selectinload(Amenity.properties))
 
             result_am = await session.execute(stmt_am)
@@ -155,8 +155,8 @@ class AmenityServices:
         new_amenities = []
         if amenity_ids:
             stmt_am = select(Amenity).where(
-                Amenity.amenity_id._in(amenity_ids),
-                Amenity.type._in([AmenityType.ROOM, AmenityType.BOTH]),
+                Amenity.amenity_id.in_(amenity_ids),
+                Amenity.type.in_([AmenityType.ROOM, AmenityType.BOTH]),
             ).options(selectinload(Amenity.properties))
 
             result_am = await session.execute(stmt_am)
