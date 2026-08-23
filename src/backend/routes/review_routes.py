@@ -71,16 +71,18 @@ async def create_property_review(
             detail="You can only leave reviews for your own bookings"
         )
 
-    if booking.check_out > datetime.now().date():
+    if booking.check_out > datetime.date.today():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You can't review a booking before check-out"
         )
 
-    review_create.user_id = current_user.user_id
-    review_create.property_id = property_id
-
-    return await ReviewService.create_review(session=session, review_create=review_create)
+    return await ReviewService.create_review(
+        session=session,
+        review_create=review_create,
+        user_id=current_user.user_id,
+        property_id=property_id
+    )
 
 
 @review_router.put("/{review_id}", response_model=ReviewResponse)
@@ -94,7 +96,7 @@ async def update_review(
         return await ReviewService.update_review(session=session, review_update=review_update, review_id=review_id)
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail="You can change reviews for your own bookings"
+        detail="You can change reviews for your own bookings",
     )
 
 

@@ -46,7 +46,7 @@ class ReviewService:
         existing_review = await self._get_reviews_in_db(session, review_id)
         return ReviewResponse.model_validate(existing_review)
 
-    async def create_review(self, session: AsyncSession, review_create: ReviewCreate) -> ReviewResponse:
+    async def create_review(self, session: AsyncSession, review_create: ReviewCreate, user_id: int, property_id: int) -> ReviewResponse:
         stmt = select(Review).where(Review.booking_id == review_create.booking_id)
         result = await session.execute(stmt)
         existing_review = result.scalar_one_or_none()
@@ -54,7 +54,7 @@ class ReviewService:
             raise HTTPException(status_code=400, detail="Review already exists")
 
         review_data = review_create.model_dump()
-        new_review = Review(**review_data)
+        new_review = Review(**review_data, user_id=user_id, property_id=property_id)
 
         session.add(new_review)
 
@@ -71,10 +71,9 @@ class ReviewService:
 
     async def update_review(self, session: AsyncSession, review_update: ReviewUpdate, review_id: int) -> ReviewResponse:
         existing_review = await self._get_reviews_in_db(session=session, review_id=review_id)
-
         update_data = review_update.model_dump(exclude_unset=True)
 
-        if "rating" in update_data and update_data["rating"] != review_update.rating:
+        if "rating" in update_data and update_data["rating"] != existing_review.rating:
             old_review_rating = existing_review.rating
             new_review_rating = update_data["rating"]
 
