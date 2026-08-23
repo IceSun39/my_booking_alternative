@@ -20,7 +20,7 @@ class Property(Base):
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))
     name: Mapped[str] = mapped_column(String)
     address: Mapped[str] = mapped_column(String)
-    description: Mapped[str] = mapped_column(String)
+    description: Mapped[str] = mapped_column(String, nullable=True)
 
     owner: Mapped["User"] = relationship(back_populates="properties")
     rooms: Mapped[List["Room"]] = relationship(back_populates="property")

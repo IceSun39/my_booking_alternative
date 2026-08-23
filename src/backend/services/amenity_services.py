@@ -125,7 +125,7 @@ class AmenityServices:
             stmt_am = select(Amenity).where(
                 Amenity.amenity_id.in_(amenity_ids),
                 Amenity.type.in_([AmenityType.PROPERTY, AmenityType.BOTH]),
-            ).options(selectinload(Amenity.properties))
+            )
 
             result_am = await session.execute(stmt_am)
             new_amenities = result_am.scalars().all()
@@ -135,6 +135,7 @@ class AmenityServices:
 
         property_obj.amenities = new_amenities
         await session.commit()
+        await session.refresh(property_obj, attribute_names=["amenities"])
 
         return [AmenityResponse.model_validate(amenity) for amenity in new_amenities]
 
@@ -157,7 +158,7 @@ class AmenityServices:
             stmt_am = select(Amenity).where(
                 Amenity.amenity_id.in_(amenity_ids),
                 Amenity.type.in_([AmenityType.ROOM, AmenityType.BOTH]),
-            ).options(selectinload(Amenity.properties))
+            )
 
             result_am = await session.execute(stmt_am)
             new_amenities = result_am.scalars().all()
@@ -166,6 +167,7 @@ class AmenityServices:
 
         room_obj.amenities = new_amenities
         await session.commit()
+        await session.refresh(room_obj, attribute_names=["amenities"])
 
         return [AmenityResponse.model_validate(amenity) for amenity in new_amenities]
 
