@@ -19,8 +19,12 @@ class ReviewService:
         return review
 
     async def _find_property(self, session: AsyncSession, booking_id: int) -> Property:
-        stmt_prop = select(Property).join(Room).where(Property.property_id == Room.property_id)
-        stmt_prop = stmt_prop.join(Booking).where(Booking.booking_id == booking_id)
+        stmt_prop = (
+            select(Property)
+            .join(Room, Property.property_id == Room.property_id)
+            .join(Booking, Room.room_id == Booking.room_id)
+            .where(Booking.booking_id == booking_id)
+        )
         result = await session.execute(stmt_prop)
         property_obj = result.scalar_one_or_none()
 

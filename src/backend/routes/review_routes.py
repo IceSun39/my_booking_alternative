@@ -25,7 +25,7 @@ BookingService = BookingService()
 async def check_is_user_review_owner(
         review_id: int,
         user: User,
-        session: AsyncSession = Depends(get_session)
+        session: AsyncSession
 ) -> bool:
     review = await ReviewService.get_review(session=session, review_id=review_id)
 
@@ -92,7 +92,7 @@ async def update_review(
         session: AsyncSession = Depends(get_session),
         current_user: User = Depends(get_current_user)
 ):
-    if await check_is_user_review_owner(review_id=review_id, user=current_user):
+    if await check_is_user_review_owner(session=session, review_id=review_id, user=current_user):
         return await ReviewService.update_review(session=session, review_update=review_update, review_id=review_id)
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -106,5 +106,5 @@ async def delete_review(
         session: AsyncSession = Depends(get_session),
         current_user: User = Depends(get_current_user)
 ):
-    if await check_is_user_review_owner(review_id=review_id, user=current_user):
+    if await check_is_user_review_owner(session=session, review_id=review_id, user=current_user):
         await ReviewService.delete_review(session=session, review_id=review_id)
