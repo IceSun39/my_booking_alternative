@@ -49,7 +49,7 @@ async def get_booking(
 ):
     is_owner = await check_user_owner_booking(session, booking_id, current_user)
 
-    if is_owner or current_user.role == Role.ADMIN:
+    if is_owner or current_user.is_admin:
         return await BookingService.get_booking(session, booking_id)
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -75,7 +75,7 @@ async def update_booking(
 ):
     is_owner = await check_user_owner_booking(session, booking_id, current_user)
 
-    if is_owner or current_user.role == Role.ADMIN:
+    if is_owner or current_user.is_admin:
         return await BookingService.update_booking(session, booking_update, booking_id)
 
     raise HTTPException(
@@ -92,7 +92,7 @@ async def delete_booking(
 ):
     is_owner = await check_user_owner_booking(session, booking_id, current_user)
 
-    if is_owner or current_user.role == Role.ADMIN:
+    if is_owner or current_user.is_admin:
         await BookingService.delete_booking(session, booking_id)
 
     raise HTTPException(

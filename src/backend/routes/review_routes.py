@@ -104,5 +104,5 @@ async def delete_review(
         session: AsyncSession = Depends(get_session),
         current_user: User = Depends(get_current_user)
 ):
-    if await check_is_user_review_owner(review_id=review_id, user=current_user):
+    if await check_is_user_review_owner(review_id=review_id, user=current_user) :
         await ReviewService.delete_review(session=session, review_id=review_id)

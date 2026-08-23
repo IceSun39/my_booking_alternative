@@ -40,4 +40,3 @@ async def remove_from_favorites(
 ):
     """Видалити готель з обраного"""
     await favorite_service.delete_favorite(session, current_user.user_id, property_id)
-    return None

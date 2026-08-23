@@ -79,7 +79,7 @@ async def delete_property(
         current_user: User = Depends(get_owner_or_admin_user)
 ):
     """Видалити власність"""
-    if await check_owner(session=session, owner=current_user, property_id=property_id):
+    if await check_owner(session=session, owner=current_user, property_id=property_id) or current_user.is_admin:
         await PropertyService.delete_property(session=session, property_id=property_id)
     raise HTTPException(
         status_code=403,

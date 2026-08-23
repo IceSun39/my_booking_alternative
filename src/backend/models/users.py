@@ -33,3 +33,7 @@ class User(Base):
     bookings: Mapped[List["Booking"]] = relationship(back_populates="user")
     favorites: Mapped[List["Favorite"]] = relationship(back_populates="user")
     reviews: Mapped[List["Review"]] = relationship(back_populates="user")
+
+    @property
+    def is_admin(self) -> bool:
+        return self.role == Role.ADMIN
