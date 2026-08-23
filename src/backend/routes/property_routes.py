@@ -19,7 +19,8 @@ PropertyService = PropertyService()
 async def check_owner_or_admin(
         session: AsyncSession,
         owner: User,
-        property_id: int
+        property_id: int,
+        current_user: User
 ) -> bool:
     existing_property = await PropertyService.get_property(session=session, property_id=property_id)
     if existing_property.owner_id == owner.user_id or current_user.is_admin:
@@ -65,7 +66,7 @@ async def update_property(
         current_user: User = Depends(get_owner_or_admin_user)
 ):
     """"Оновити дані про власність"""
-    if await check_owner_or_admin(session=session, owner=current_user, property_id=property_id):
+    if await check_owner_or_admin(session=session, owner=current_user, property_id=property_id, current_user=current_user):
         return await PropertyService.update_property(session=session, property_id=property_id, properties_update=property_update)
     raise HTTPException(
         status_code=403,
@@ -80,7 +81,7 @@ async def delete_property(
         current_user: User = Depends(get_owner_or_admin_user)
 ):
     """Видалити власність"""
-    if await check_owner_or_admin(session=session, owner=current_user, property_id=property_id):
+    if await check_owner_or_admin(session=session, owner=current_user, property_id=property_id,current_user=current_user):
         await PropertyService.delete_property(session=session, property_id=property_id)
         return
     raise HTTPException(
