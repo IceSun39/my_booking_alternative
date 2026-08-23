@@ -1,3 +1,4 @@
+from sqlalchemy.sql.functions import current_user
 from src.backend.models import User, Role
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,13 +16,13 @@ properties_router = APIRouter(
 PropertyService = PropertyService()
 
 
-async def check_owner(
+async def check_owner_or_admin(
         session: AsyncSession,
         owner: User,
         property_id: int
 ) -> bool:
     existing_property = await PropertyService.get_property(session=session, property_id=property_id)
-    if existing_property.owner_id == owner.user_id:
+    if existing_property.owner_id == owner.user_id or current_user.is_admin:
         return True
     raise HTTPException(
         status_code=403,
@@ -64,8 +65,8 @@ async def update_property(
         current_user: User = Depends(get_owner_or_admin_user)
 ):
     """"Оновити дані про власність"""
-    if await check_owner(session=session, owner=current_user, property_id=property_id):
-        return PropertyService.update_property(session=session, property_id=property_id, properties_update=property_update)
+    if await check_owner_or_admin(session=session, owner=current_user, property_id=property_id):
+        return await PropertyService.update_property(session=session, property_id=property_id, properties_update=property_update)
     raise HTTPException(
         status_code=403,
         detail="Access Denied",
@@ -79,8 +80,9 @@ async def delete_property(
         current_user: User = Depends(get_owner_or_admin_user)
 ):
     """Видалити власність"""
-    if await check_owner(session=session, owner=current_user, property_id=property_id) or current_user.is_admin:
+    if await check_owner_or_admin(session=session, owner=current_user, property_id=property_id):
         await PropertyService.delete_property(session=session, property_id=property_id)
+        return
     raise HTTPException(
         status_code=403,
         detail="Access Denied",
