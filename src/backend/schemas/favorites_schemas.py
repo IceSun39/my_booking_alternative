@@ -1,9 +1,10 @@
 from pydantic import BaseModel, ConfigDict
+from typing import Optional
 
 
 class FavoriteCreate(BaseModel):
     property_id: int
-    room_id: int | None
+    room_id: Optional[int] = None
 
 
 class FavoriteResponse(BaseModel):
@@ -11,4 +12,3 @@ class FavoriteResponse(BaseModel):
 
     user_id: int
     property_id: int
-    room_id: int

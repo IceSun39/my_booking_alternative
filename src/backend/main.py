@@ -1,4 +1,6 @@
 import os
+from backend.routes.search_services import search_router
+from backend.schemas import search_schemas
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from src.backend.routes import *
@@ -15,3 +17,4 @@ app.include_router(review_router)
 app.include_router(review_property_router)
 app.include_router(room_router)
 app.include_router(user_router)
+app.include_router(search_router)
