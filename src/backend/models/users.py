@@ -26,7 +26,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True)
     password: Mapped[str] = mapped_column(String)
     username: Mapped[str] = mapped_column(String)
-    phone_number: Mapped[str] = mapped_column(String)
+    phone_number: Mapped[str] = mapped_column(String, nullable=True)
     role: Mapped[str] = mapped_column(Enum(Role))
 
     properties: Mapped[List["Property"]] = relationship(back_populates="owner")

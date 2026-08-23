@@ -31,7 +31,7 @@ class Booking(Base):
     guests: Mapped[int] = mapped_column(Integer)
 
     total_price: Mapped[float] = mapped_column(Float)
-    status: Mapped[str] = mapped_column(Enum(BookingStatus))
+    status: Mapped[BookingStatus] = mapped_column(Enum(BookingStatus), default=BookingStatus.PENDING)
 
     user: Mapped["User"] = relationship(back_populates="bookings")
     room: Mapped["Room"] = relationship(back_populates="bookings")
