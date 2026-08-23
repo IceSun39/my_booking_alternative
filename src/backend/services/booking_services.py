@@ -1,3 +1,6 @@
+from backend.models import bookings
+from functools import total_ordering
+
 from typing import Optional, List
 
 from sqlalchemy import select
@@ -13,7 +16,11 @@ RoomService = RoomService()
 
 
 class BookingService:
-    async def _get_booking_in_db(self, session: AsyncSession, booking_id: int) -> Optional[Booking]:
+    async def _get_booking_in_db(
+            self,
+            session: AsyncSession,
+            booking_id: int
+    ) -> Optional[Booking]:
         """Метод знаходить бронювання по id"""
         stmt = select(Booking).where(Booking.booking_id == booking_id)
         result = await session.execute(stmt)
@@ -23,28 +30,42 @@ class BookingService:
             raise HTTPException(status_code=404, detail="Booking not found")
         return booking
 
-    async def _find_all_bookings_for_room(self, session: AsyncSession, room_id: int, check_in: date, check_out: date) -> \
-            List[Booking]:
+    async def _find_all_bookings_for_room(
+            self,
+            session: AsyncSession,
+            room_id: int,
+            check_in: date,
+            check_out: date,
+            exclude_booking_id: Optional[int] = None
+    ) -> List[Booking]:
         """Метод знаходить всі бронювання, які перетинаються з нашими датами"""
-        find_bookings = select(Booking).where(
+        # Створюємо базовий запит
+        stmt = select(Booking).where(
             Booking.room_id == room_id,
             check_in < Booking.check_out,
-            check_out > Booking.check_in,
-            Booking.booking_id != Booking.booking_id
-        ).order_by(Booking.check_in.asc())
+            check_out > Booking.check_in
+        )
 
-        result = await session.execute(find_bookings)
+        # Якщо ми оновлюємо бронювання, виключаємо його ж ID з перевірки
+        if exclude_booking_id:
+            stmt = stmt.where(Booking.booking_id != exclude_booking_id)
 
-        bookings = result.scalars().all()
+        stmt = stmt.order_by(Booking.check_in.asc())
+        result = await session.execute(stmt)
+        return result.scalars().all()
 
-        return bookings
+    async def _check_booking_dates_for_hostel_rooms(
+            self,
+            session: AsyncSession,
+            booking: BookingBase,
+            room: Room,
+            exclude_booking_id: Optional[int] = None
+    ) -> bool:
+        """Метод спершу рахує кількість гостей, які будуть у кімнаті в конкретні дати й потім перевіряє чи влазять туди нові гості"""
+        bookings = await self._find_all_bookings_for_room(session, room.room_id, booking.check_in, booking.check_out,
+                                                          exclude_booking_id)
 
-    async def _check_booking_dates_for_hostel_rooms(self, session: AsyncSession, booking: BookingBase,
-                                                    room: Room) -> bool:
-        """Метод спершу рахує кількість гостей, які будуть у кімнаті в конкретні дати і потім перевіряє чи влазять туди нові гості"""
-        bookings = await self._find_all_bookings_for_room(session, room.room_id, booking.check_in, booking.check_out)
-
-        # Якщо записів немає, то нічого заважати і не може
+        # Якщо записів немає, то нічого заважати й не може
         if not bookings:
             return True
         total_days = (booking.check_out - booking.check_in).days
@@ -69,11 +90,16 @@ class BookingService:
 
         return True
 
-    # Метод перевіряє чи вільна кімната ГОТЕЛЮ
-    async def _check_booking_dates_for_hotel_rooms(self, session: AsyncSession, booking: BookingBase,
-                                                   room: Room) -> bool:
+    async def _check_booking_dates_for_hotel_rooms(
+            self,
+            session: AsyncSession,
+            booking: BookingBase,
+            room: Room,
+            exclude_booking_id: Optional[int] = None
+    ) -> bool:
         """Метод перевіряє чи кімната пуста в задані дати"""
-        bookings = await self._find_all_bookings_for_room(session, room.room_id, booking.check_in, booking.check_out)
+        bookings = await self._find_all_bookings_for_room(session, room.room_id, booking.check_in, booking.check_out,
+                                                          exclude_booking_id)
 
         # Якщо в кімнати взагалі немає записів, то ласкаво просимо
         if not bookings:
@@ -85,20 +111,41 @@ class BookingService:
             self,
             session: AsyncSession,
             booking: BookingBase,
-            room: Room) -> bool:
+            room: Room,
+            exclude_booking_id: Optional[int] = None
+    ) -> bool:
         """Перевіряє чи вільна кімната для запису"""
 
         if room.is_contains_several_groups:
-            return await self._check_booking_dates_for_hostel_rooms(session, booking, room)
+            return await self._check_booking_dates_for_hostel_rooms(session, booking, room, exclude_booking_id)
 
-        # Якщо кімната готельного типу
-        return await self._check_booking_dates_for_hotel_rooms(session, booking, room)
+        return await self._check_booking_dates_for_hotel_rooms(session, booking, room, exclude_booking_id)
 
-    async def get_booking(self, session: AsyncSession, booking_id: int) -> Optional[BookingResponse]:
+    async def get_booking(
+            self,
+            session: AsyncSession,
+            booking_id: int
+    ) -> Optional[BookingResponse]:
         booking = await self._get_booking_in_db(session, booking_id)
         return BookingResponse.model_validate(booking)
 
-    async def create_booking(self, session: AsyncSession, booking_create: BookingCreate) -> BookingResponse:
+    async def get_all_user_bookings(
+            self,
+            session: AsyncSession,
+            user_id: int
+    ) -> List[BookingResponse]:
+        stmt = select(Booking).where(Booking.user_id == user_id)
+        result = await session.execute(stmt)
+        bookings = result.scalars().all()
+
+        return [BookingResponse.model_validate(booking) for booking in bookings]
+
+    async def create_booking(
+            self,
+            session: AsyncSession,
+            booking_create: BookingCreate,
+            user_id: int
+    ) -> BookingResponse:
         room = await RoomService._get_room_in_db(session, booking_create.room_id)
 
         is_available = await self._check_booking_available(session, booking_create, room)
@@ -109,8 +156,13 @@ class BookingService:
                 detail="Not enough room available for these dates"
             )
 
+        total_price = room.price * (booking_create.check_out - booking_create.check_in).days
         booking_data = booking_create.model_dump()
-        new_booking = Booking(**booking_data)
+        new_booking = Booking(
+            **booking_data,
+            total_price=total_price,
+            user_id=user_id
+        )
 
         session.add(new_booking)
         await session.commit()
@@ -118,10 +170,13 @@ class BookingService:
 
         return BookingResponse.model_validate(new_booking)
 
-    async def update_booking(self, session: AsyncSession, booking_update: BookingUpdate,
-                             booking_id: int) -> Optional[BookingResponse]:
+    async def update_booking(
+            self,
+            session: AsyncSession,
+            booking_update: BookingUpdate,
+            booking_id: int
+    ) -> Optional[BookingResponse]:
         existing_booking = await self._get_booking_in_db(session, booking_id)
-
         update_data = booking_update.model_dump(exclude_unset=True)
 
         check_in = update_data.get("check_in", existing_booking.check_in)
@@ -130,15 +185,25 @@ class BookingService:
         room_id = update_data.get("room_id", existing_booking.room_id)
 
         booking_to_check = BookingBase(check_in=check_in, check_out=check_out, guests=guests)
-
         room = await RoomService._get_room_in_db(session, room_id)
 
-        is_available = await self._check_booking_available(session, booking_to_check, room)
+
+        is_available = await self._check_booking_available(session, booking_to_check, room,
+                                                           exclude_booking_id=booking_id)
+
         if not is_available:
             raise HTTPException(
                 status_code=400,
                 detail="Not enough room available for these dates"
             )
+
+
+        if (check_in != existing_booking.check_in or
+                check_out != existing_booking.check_out or
+                room_id != existing_booking.room_id):
+            total_price = room.price * (check_out - check_in).days
+            existing_booking.total_price = total_price
+
 
         for key, value in update_data.items():
             setattr(existing_booking, key, value)
@@ -147,7 +212,11 @@ class BookingService:
         await session.refresh(existing_booking)
         return BookingResponse.model_validate(existing_booking)
 
-    async def delete_booking(self, session: AsyncSession, booking_id: int) -> None:
+    async def delete_booking(
+            self,
+            session: AsyncSession,
+            booking_id: int
+    ) -> None:
         booking = await self._get_booking_in_db(session, booking_id)
 
         await session.delete(booking)
