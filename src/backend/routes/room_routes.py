@@ -9,7 +9,7 @@ from src.backend.database.database import get_session
 from src.backend.core.dependencies import get_current_user, get_owner_or_admin_user
 
 room_router = APIRouter(
-    prefix="/api/room",
+    prefix="/api/rooms",
     tags=["Room"],
 )
 
