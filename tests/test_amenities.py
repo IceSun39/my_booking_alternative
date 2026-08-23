@@ -3,7 +3,9 @@ from httpx import AsyncClient
 from src.backend.main import app
 from src.backend.core.dependencies import get_admin_user
 from src.backend.models.users import User, Role
-
+from tests.conftest import TestingSessionLocal
+from src.backend.models import Property, Room
+from src.backend.core.dependencies import get_owner_or_admin_user
 
 
 async def override_get_admin_user():
@@ -93,3 +95,93 @@ async def test_delete_amenity(async_client: AsyncClient):
         json={"name": "Тест"}
     )
     assert update_resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_update_property_amenities(async_client: AsyncClient):
+    """Тестуємо додавання зручностей до готелю"""
+
+    # 1. Створюємо кілька зручностей через API (від імені адміна, як у попередніх тестах)
+    resp1 = await async_client.post("/api/amenity/", json={"name": "Паркінг", "type": "property"})
+    resp2 = await async_client.post("/api/amenity/", json={"name": "Wi-Fi", "type": "both"})
+
+    amenity_id_1 = resp1.json()["amenity_id"]
+    amenity_id_2 = resp2.json()["amenity_id"]
+
+    # 2. Створюємо готель напряму в тестовій базі даних
+    async with TestingSessionLocal() as session:
+        new_property = Property(
+            name="Готель для тестів",
+            owner_id=1,
+            address="Вулиця Тестова, 1",
+        )
+        session.add(new_property)
+        await session.commit()
+        await session.refresh(new_property)
+        property_id = new_property.property_id
+
+    # 3. Перевизначаємо залежність авторизації, щоб API думало, що ми — власник (ID 1)
+    async def override_get_owner():
+        return User(user_id=1, email="owner@test.com", role=Role.USER)
+
+    app.dependency_overrides[get_owner_or_admin_user] = override_get_owner
+
+    # 4. Відправляємо запит на оновлення списку зручностей
+    payload = {"amenity_ids": [amenity_id_1, amenity_id_2]}
+    response = await async_client.put(f"/api/property/{property_id}/amenities/", json=payload)
+
+    # 5. Перевіряємо результати
+    assert response.status_code == 202
+    data = response.json()
+    assert len(data) == 2
+    assert any(a["name"] == "Паркінг" for a in data)
+
+    app.dependency_overrides.pop(get_owner_or_admin_user, None)
+
+
+@pytest.mark.asyncio
+async def test_update_room_amenities(async_client: AsyncClient):
+    """Тестуємо додавання зручностей до кімнати"""
+
+    # 1. Створюємо зручність типу "room"
+    resp = await async_client.post("/api/amenity/", json={"name": "Кондиціонер", "type": "room"})
+    amenity_id = resp.json()["amenity_id"]
+
+    # 2. Створюємо готель, а потім кімнату в ньому
+    async with TestingSessionLocal() as session:
+        # Обов'язкові поля для Property
+        new_property = Property(name="Готель 2", owner_id=1, address="Вулиця Тестова, 1",)
+        session.add(new_property)
+        await session.commit()
+        await session.refresh(new_property)
+
+        # Обов'язкові поля для Room
+        new_room = Room(
+            property_id=new_property.property_id,
+            name="Люкс",
+            capacity=2,
+            price=1500,
+            is_contains_several_groups=False,
+        )
+        session.add(new_room)
+        await session.commit()
+        await session.refresh(new_room)
+        room_id = new_room.room_id
+
+    # 3. Знову стаємо власником
+    async def override_get_owner():
+        return User(user_id=1, email="owner@test.com", role=Role.USER)
+
+    app.dependency_overrides[get_owner_or_admin_user] = override_get_owner
+
+    # 4. Робимо запит
+    payload = {"amenity_ids": [amenity_id]}
+    response = await async_client.put(f"/api/rooms/{room_id}/amenities/", json=payload)
+
+    # 5. Перевіряємо
+    assert response.status_code == 202
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["name"] == "Кондиціонер"
+
+    app.dependency_overrides.pop(get_owner_or_admin_user, None)
