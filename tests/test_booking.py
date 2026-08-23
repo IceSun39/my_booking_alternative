@@ -30,7 +30,10 @@ async def setup_booking_data():
         # 2. Готель
         property_obj = Property(
             name="Test Hotel",
-            address="Test Street, 10",
+            country="Україна",
+            city="Київ",
+            street="Тестова",
+            house_number="1",
             owner_id=user_id
         )
         session.add(property_obj)

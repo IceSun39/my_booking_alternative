@@ -12,7 +12,6 @@ async def override_get_admin_user():
     return User(user_id=1, email="admin@test.com", role=Role.ADMIN)
 
 
-
 app.dependency_overrides[get_admin_user] = override_get_admin_user
 
 
@@ -111,9 +110,12 @@ async def test_update_property_amenities(async_client: AsyncClient):
     # 2. Створюємо готель напряму в тестовій базі даних
     async with TestingSessionLocal() as session:
         new_property = Property(
-            name="Готель для тестів",
-            owner_id=1,
-            address="Вулиця Тестова, 1",
+            name="Test Hotel",
+            country="Україна",
+            city="Київ",
+            street="Тестова",
+            house_number="1",
+            owner_id=1
         )
         session.add(new_property)
         await session.commit()
@@ -149,8 +151,14 @@ async def test_update_room_amenities(async_client: AsyncClient):
 
     # 2. Створюємо готель, а потім кімнату в ньому
     async with TestingSessionLocal() as session:
-        # Обов'язкові поля для Property
-        new_property = Property(name="Готель 2", owner_id=1, address="Вулиця Тестова, 1",)
+        new_property = Property(
+            name="Test Hotel",
+            country="Україна",
+            city="Київ",
+            street="Тестова",
+            house_number="1",
+            owner_id=1
+        )
         session.add(new_property)
         await session.commit()
         await session.refresh(new_property)

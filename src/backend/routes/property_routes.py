@@ -30,7 +30,7 @@ async def check_owner(
 
 
 @properties_router.get("/{property_id}", response_model=PropertiesResponse)
-async def get_property(property_id: int, session: AsyncSession = Depends(get_session)):
+async def get_property_by_id(property_id: int, session: AsyncSession = Depends(get_session)):
     """Отримати готель по id"""
     return await PropertyService.get_property(session=session, property_id=property_id)
 
