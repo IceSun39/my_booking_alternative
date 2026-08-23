@@ -1,5 +1,5 @@
 from typing import List, TYPE_CHECKING
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import String, ForeignKey, Float, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.backend.database import Base
@@ -24,6 +24,8 @@ class Property(Base):
     street: Mapped[str] = mapped_column(String)
     house_number: Mapped[str] = mapped_column(String)
     description: Mapped[str] = mapped_column(String, nullable=True)
+    rating: Mapped[float] = mapped_column(Float, default=0.0)
+    reviews_count: Mapped[int] = mapped_column(Integer, default=0)
 
     owner: Mapped["User"] = relationship(back_populates="properties")
     rooms: Mapped[List["Room"]] = relationship(back_populates="property")
