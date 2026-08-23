@@ -15,8 +15,9 @@ class Review(Base):
     __tablename__ = "reviews"
 
     review_id: Mapped[int] = mapped_column(primary_key=True)
-    rating: Mapped[int] = mapped_column(Integer, CheckConstraint("rating >= 1 AND rating <= 10"))
-    comment: Mapped[str | None] = mapped_column(Text)  
+    rating: Mapped[int] = mapped_column(Integer, CheckConstraint("rating >= 1 AND rating <= 10",
+                                                                 name="check_rating_range_reviews"), default=0.0)
+    comment: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))

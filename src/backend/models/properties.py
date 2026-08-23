@@ -1,5 +1,5 @@
 from typing import List, TYPE_CHECKING
-from sqlalchemy import String, ForeignKey, Float, Integer
+from sqlalchemy import String, ForeignKey, Float, Integer, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.backend.database import Base
@@ -24,11 +24,12 @@ class Property(Base):
     street: Mapped[str] = mapped_column(String)
     house_number: Mapped[str] = mapped_column(String)
     description: Mapped[str] = mapped_column(String, nullable=True)
-    rating: Mapped[float] = mapped_column(Float, default=0.0)
+    rating: Mapped[float] = mapped_column(Float, CheckConstraint("rating >= 0 AND rating <= 10", name="check_rating_range_properties"), default=0.0)
     reviews_count: Mapped[int] = mapped_column(Integer, default=0)
 
     owner: Mapped["User"] = relationship(back_populates="properties")
     rooms: Mapped[List["Room"]] = relationship(back_populates="property")
     favorites: Mapped[List["Favorite"]] = relationship(back_populates="property")
     reviews: Mapped[List["Review"]] = relationship(back_populates="property")
-    amenities: Mapped[List["Amenity"]] = relationship("Amenity",secondary=property_amenities,back_populates="properties")
+    amenities: Mapped[List["Amenity"]] = relationship("Amenity", secondary=property_amenities,
+                                                      back_populates="properties")
