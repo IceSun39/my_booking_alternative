@@ -2,7 +2,8 @@ from typing import Optional, List
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException, status
 
 from src.backend.models import Booking, Room
 from src.backend.schemas.bookings_schemas import BookingCreate, BookingUpdate, BookingResponse, BookingBase
@@ -161,11 +162,20 @@ class BookingService:
             user_id=user_id
         )
 
-        session.add(new_booking)
-        await session.commit()
-        await session.refresh(new_booking)
+        try:
+            await session.commit()
+            await session.refresh(new_booking)
+            return new_booking
 
-        return BookingResponse.model_validate(new_booking)
+        except IntegrityError as e:
+            await session.rollback()
+
+            if "exclude_overlapping_bookings" in str(e.orig):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="На жаль, ці дати щойно забронював хтось інший. Оберіть, будь ласка, інші дати."
+                )
+            raise e
 
     async def update_booking(
             self,

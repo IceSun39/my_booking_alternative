@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING
 from datetime import date
-from sqlalchemy import ForeignKey, Integer, Float, Date, Enum
+from sqlalchemy import ForeignKey, Integer, Float, Date, Enum, Column, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import ExcludeConstraint
 import enum
 
 from src.backend.database import Base
@@ -32,6 +33,14 @@ class Booking(Base):
 
     total_price: Mapped[float] = mapped_column(Float)
     status: Mapped[BookingStatus] = mapped_column(Enum(BookingStatus), default=BookingStatus.PENDING)
+
+    __table_args__ = (
+        ExcludeConstraint(
+            ("room_id", "="),
+            (text("datarange(check_in, check_out)"), "&&"),
+            name="exclude_overlapping_bookings"
+        ),
+    )
 
     user: Mapped["User"] = relationship(back_populates="bookings")
     room: Mapped["Room"] = relationship(back_populates="bookings")
