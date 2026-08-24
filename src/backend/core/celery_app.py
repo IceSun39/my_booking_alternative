@@ -1,4 +1,3 @@
-import celery
 from celery import Celery
 from .celery_config import settings
 
