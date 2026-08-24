@@ -61,20 +61,22 @@ class RoomService:
         )
 
         session.add(new_room)
+        await session.flush()
+        room_id = new_room.room_id
         await session.commit()
-        await session.refresh(new_room)
+        new_room = await self._refresh_room_in_db(session=session, room_id=room_id)
         return RoomResponse.model_validate(new_room)
 
     async def update_room(self, session: AsyncSession, room_update: RoomUpdate, room_id: int) -> RoomResponse:
         existing_room = await self._get_room_in_db(session=session, room_id=room_id)
 
-        update_data = room_update.model_dump(exclude_unset=True)
+        update_data = room_update.model_dump(exclude_unset=True, exclude={"amenities","room_id"})
 
         for key, value in update_data.items():
             setattr(existing_room, key, value)
 
         await session.commit()
-        await session.refresh(existing_room)
+        existing_room = await self._refresh_room_in_db(session=session, room_id=room_id)
         return RoomResponse.model_validate(existing_room)
 
     async def delete_room(self, session: AsyncSession, room_id: int) -> None:

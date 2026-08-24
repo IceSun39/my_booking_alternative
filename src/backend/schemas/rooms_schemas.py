@@ -7,6 +7,7 @@ class RoomBase(BaseModel):
     name: Annotated[str, Field(min_length=1)]
     price: Annotated[float, Field(gt=0)]
     capacity: Annotated[int, Field(gt=0)]
+    is_contains_several_groups: bool = Field(default=False)
 
 
 class RoomCreate(RoomBase):

@@ -22,7 +22,7 @@ async def check_user_is_room_owner(session: AsyncSession, room_id: int, current_
         owner_id=current_user.user_id
     )
 
-    if not is_owner or current_user.role != Role.ADMIN:
+    if not is_owner and not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to perform this action"
@@ -45,7 +45,7 @@ async def create_room(room: RoomCreate, session: AsyncSession = Depends(get_sess
         owner_id=current_user.user_id
     )
 
-    if not is_owner or current_user.role != Role.ADMIN:
+    if not is_owner and not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to perform this action"
