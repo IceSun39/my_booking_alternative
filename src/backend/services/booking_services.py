@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 
-from src.backend.models import Booking, Room
+from src.backend.models import Booking, Room, BookingStatus
 from src.backend.schemas.bookings_schemas import BookingCreate, BookingUpdate, BookingResponse, BookingBase
 from src.backend.services.rooms_services import RoomService
 from datetime import date
@@ -159,13 +159,15 @@ class BookingService:
         new_booking = Booking(
             **booking_data,
             total_price=total_price,
-            user_id=user_id
+            user_id=user_id,
+            status=BookingStatus.PENDING
         )
 
         try:
+            session.add(new_booking)
             await session.commit()
             await session.refresh(new_booking)
-            return new_booking
+            return BookingResponse.model_validate(new_booking)
 
         except IntegrityError as e:
             await session.rollback()

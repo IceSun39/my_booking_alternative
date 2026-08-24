@@ -37,7 +37,7 @@ class Booking(Base):
     __table_args__ = (
         ExcludeConstraint(
             ("room_id", "="),
-            (text("datarange(check_in, check_out)"), "&&"),
+            (text("daterange(check_in, check_out)"), "&&"),
             name="exclude_overlapping_bookings"
         ),
     )

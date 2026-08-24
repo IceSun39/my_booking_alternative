@@ -78,14 +78,25 @@ async def test_get_user_not_found(async_client: AsyncClient, setup_user_data):
 
 
 @pytest.mark.asyncio
-async def test_get_user_forbidden_for_non_admin(async_client: AsyncClient, setup_user_data):
+async def test_get_user_success_for_self(async_client: AsyncClient, setup_user_data):
+    """Юзер може переглядати власний профіль"""
     data = setup_user_data
     app.dependency_overrides[get_current_user] = override_user(data["target_id"], Role.USER)
-    try:
-        response = await async_client.get(f"/api/user/{data['target_id']}")
-        assert response.status_code == 403
-    finally:
-        app.dependency_overrides.pop(get_current_user, None)
+
+    response = await async_client.get(f"/api/user/{data['target_id']}")
+    assert response.status_code == 200
+    assert response.json()["user_id"] == data["target_id"]
+
+
+@pytest.mark.asyncio
+async def test_get_user_forbidden_for_other_user(async_client: AsyncClient, setup_user_data):
+    """Юзер НЕ може переглядати чужий профіль"""
+    data = setup_user_data
+    # Авторизуємось під неіснуючим лівим юзером (ID=999)
+    app.dependency_overrides[get_current_user] = override_user(999, Role.USER)
+
+    response = await async_client.get(f"/api/user/{data['target_id']}")
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio
@@ -189,14 +200,25 @@ async def test_update_user_not_found(async_client: AsyncClient, setup_user_data)
 
 
 @pytest.mark.asyncio
-async def test_update_user_forbidden_for_non_admin(async_client: AsyncClient, setup_user_data):
+async def test_update_user_success_for_self(async_client: AsyncClient, setup_user_data):
+    """Юзер може оновлювати власні дані"""
     data = setup_user_data
     app.dependency_overrides[get_current_user] = override_user(data["target_id"], Role.USER)
-    try:
-        response = await async_client.put(f"/api/user/{data['target_id']}", json={"username": "self_rename"})
-        assert response.status_code == 403
-    finally:
-        app.dependency_overrides.pop(get_current_user, None)
+
+    response = await async_client.put(f"/api/user/{data['target_id']}", json={"username": "self_rename"})
+    assert response.status_code == 200
+    assert response.json()["username"] == "self_rename"
+
+
+@pytest.mark.asyncio
+async def test_update_user_forbidden_for_other_user(async_client: AsyncClient, setup_user_data):
+    """Юзер НЕ може оновлювати чужі дані"""
+    data = setup_user_data
+    # Авторизуємось під лівим юзером (ID=999)
+    app.dependency_overrides[get_current_user] = override_user(999, Role.USER)
+
+    response = await async_client.put(f"/api/user/{data['target_id']}", json={"username": "hacker_rename"})
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio
@@ -224,11 +246,21 @@ async def test_delete_user_not_found(async_client: AsyncClient, setup_user_data)
 
 
 @pytest.mark.asyncio
-async def test_delete_user_forbidden_for_non_admin(async_client: AsyncClient, setup_user_data):
+async def test_delete_user_forbidden_for_other_user(async_client: AsyncClient, setup_user_data):
+    """Юзер НЕ може видаляти чужий профіль"""
+    data = setup_user_data
+    # Авторизуємось під лівим юзером (ID=999)
+    app.dependency_overrides[get_current_user] = override_user(999, Role.USER)
+
+    response = await async_client.delete(f"/api/user/{data['target_id']}")
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_delete_user_success_for_self(async_client: AsyncClient, setup_user_data):
+    """Юзер може видалити власний профіль (Цей тест має йти останнім, щоб не зламати інші)"""
     data = setup_user_data
     app.dependency_overrides[get_current_user] = override_user(data["target_id"], Role.USER)
-    try:
-        response = await async_client.delete(f"/api/user/{data['target_id']}")
-        assert response.status_code == 403
-    finally:
-        app.dependency_overrides.pop(get_current_user, None)
+
+    response = await async_client.delete(f"/api/user/{data['target_id']}")
+    assert response.status_code == 204

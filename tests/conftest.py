@@ -8,11 +8,10 @@ from src.backend.database.database import get_session, Base
 from src.backend.models import Amenity, Booking, Favorite, Property, Review, Room, User
 from src.backend.models.associations import property_amenities, room_amenities
 
-SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
+SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://new_test_user:secure_password@localhost:5432/booking_test_db"
 
 engine_test = create_async_engine(
     SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
     poolclass=NullPool,
 )
 TestingSessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine_test, class_=AsyncSession)

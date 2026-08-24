@@ -10,7 +10,7 @@ from src.backend.models.users import User, Role
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-UserService = UserService()
+user_service = UserService()
 
 async def get_current_user(token: str = Depends(oauth2_scheme),
                            session: AsyncSession = Depends(get_session)) -> User:
@@ -20,6 +20,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Please use an access token, not a refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     email = payload.get("sub")
@@ -27,13 +28,15 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token structure: missing sub",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user = UserService.get_user_by_email(session, email)
+    user = await user_service.get_user_by_email(session, email)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     return user
@@ -44,6 +47,7 @@ async def get_owner_or_admin_user(current_user: User = Depends(get_current_user)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to perform this action",
+            headers={"WWW-Authenticate": "Bearer"},
         )
     return current_user
 
@@ -53,5 +57,6 @@ async def get_admin_user(current_user: User = Depends(get_current_user)) -> User
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to perform this action",
+            headers={"WWW-Authenticate": "Bearer"},
         )
     return current_user
