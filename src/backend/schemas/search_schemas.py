@@ -15,9 +15,9 @@ class SearchFilter(BaseModel):
     check_in: Annotated[date, Field(..., description="Date of check_in")]
     check_out: Annotated[date, Field(..., description="Check out date")]
     city: Annotated[str, Field(..., description="City")]
-    guest: Annotated[str, Field(..., description="Number of guests")]
+    guest: Annotated[int, Field(..., gt=0, description="Number of guests")]
 
-    min_price: Optional[Annotated[float, Field(..., description="Minimum price")]]
-    max_price: Optional[Annotated[float, Field(..., description="Maximum price")]]
-    amenities: Optional[Annotated[List[int], Field(..., description="Amenities")]]
-    sort_by: Optional[Annotated[SortBy, Field(..., description="Sort by")]]
+    min_price: Annotated[Optional[float], Field(default=None)] = None
+    max_price: Annotated[Optional[float], Field(default=None)] = None
+    amenities: Annotated[Optional[List[int]], Field(default=None)] = None
+    sort_by: Annotated[Optional[SortBy], Field(default=None)] = None

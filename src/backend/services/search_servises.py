@@ -1,3 +1,4 @@
+from src.backend.models import Amenity
 from src.backend.models import Property, Room, Booking
 from sqlalchemy import select, and_, exists
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,14 +21,14 @@ class SearchServices:
         stmt = stmt.where(Room.capacity >= filters.guest)
 
         # Filter by price
-        if filters.min_price:
-            stmt = stmt.where(Room.price > filters.min_price)
-        if filters.max_price:
-            stmt = stmt.where(Room.price < filters.max_price)
+        if filters.min_price is not None:
+            stmt = stmt.where(Room.price >= filters.min_price)
+        if filters.max_price is not None:
+            stmt = stmt.where(Room.price <= filters.max_price)
 
         # Filter by amenities
-        if filters.amenities:
-            stmt = stmt.where(Room.amenities.in_(filters.amenities))
+        if filters.amenities is not None:
+            stmt = stmt.where(Room.amenities.any(Amenity.amenity_id.in_(filters.amenities)))
 
         overlapping_bookings = select(Booking.booking_id).where(
             and_(
@@ -37,11 +38,9 @@ class SearchServices:
             )
         )
 
-        stmt = stmt.where(~exists(overlapping_bookings))
+        stmt = stmt.where(~exists(overlapping_bookings)).distinct()
 
-        stmt = stmt.distinct()
-
-        if filters.sort_by:
+        if filters.sort_by is not None:
             sort_by = filters.sort_by
             if sort_by == SortBy.PRICE_ASC:
                 stmt = stmt.order_by(Room.price.asc())
