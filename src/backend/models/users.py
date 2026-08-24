@@ -27,7 +27,7 @@ class User(Base):
     password: Mapped[str] = mapped_column(String)
     username: Mapped[str] = mapped_column(String)
     phone_number: Mapped[str] = mapped_column(String, nullable=True)
-    role: Mapped[str] = mapped_column(Enum(Role))
+    role: Mapped[Role] = mapped_column(Enum(Role))
 
     properties: Mapped[List["Property"]] = relationship(back_populates="owner")
     bookings: Mapped[List["Booking"]] = relationship(back_populates="user")

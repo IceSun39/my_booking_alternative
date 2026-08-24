@@ -15,7 +15,7 @@ UserService = UserService()
 
 
 @user_router.get("/me", response_model=UserResponse)
-async def get_current_user(session: AsyncSession = Depends(get_session),
+async def get_me(session: AsyncSession = Depends(get_session),
                            current_user: User = Depends(get_current_user)):
     return current_user
 

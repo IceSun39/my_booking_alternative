@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.backend.core.security import create_access_token, verify_password, decode_token
 from src.backend.services.user_services import UserService
-from src.backend.schemas.users_schemas import UserResponse, UserCreate
+from src.backend.schemas.users_schemas import UserResponse, UserRegister
 from src.backend.database.database import get_session
 
 auth_router = APIRouter(
@@ -20,13 +20,9 @@ UserService = UserService()
 
 
 @auth_router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register_user(user_data: UserCreate, session: AsyncSession = Depends(get_session)):
-    existing_user = await UserService.get_user_by_email(session, user_data.email)
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+async def register_user(user_data: UserRegister, session: AsyncSession = Depends(get_session)):
+    return await UserService.create_user(session, user_data)
 
-    new_user = await UserService.create_user(session, user_data)
-    return new_user
 
 
 @auth_router.post("/login", status_code=status.HTTP_200_OK)
@@ -62,7 +58,7 @@ async def login_user(form_data: OAuth2PasswordRequestForm = Depends(),
 @auth_router.post("/refresh", status_code=status.HTTP_200_OK)
 async def refresh_access_token(refresh_token: str = Header(..., alias="Authorization"),
                                session: AsyncSession = Depends(get_session)):
-    token = refresh_token.replace('Bearer', '')
+    token = refresh_token.replace('Bearer ', '').strip()
     token_data = decode_token(token)
 
     if not token_data.get("refresh"):

@@ -4,8 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 
-from src.backend.models.users import User
-from src.backend.schemas.users_schemas import UserCreate, UserUpdate, UserResponse
+from src.backend.models.users import User, Role
+from src.backend.schemas.users_schemas import UserUpdate, UserResponse, UserRegister
 from src.backend.core.security import get_password_hash
 
 
@@ -23,18 +23,18 @@ class UserService:
         user = await self._get_user_in_db(session=session, user_id=user_id)
         return UserResponse.model_validate(user)
 
-    async def create_user(self, session: AsyncSession, user_create: UserCreate) -> UserResponse:
+    async def create_user(self, session: AsyncSession, user_create: UserRegister) -> UserResponse:
         existing_user = await self.get_user_by_email(session=session, email=user_create.email)
         if existing_user:
             raise HTTPException(status_code=400, detail="User already exists")
 
         hashed_password = get_password_hash(user_create.password)
 
-        user_data = user_create.model_dump(exclude={"password"})
-
+        user_data = user_create.model_dump(exclude={"password", "role"})
         new_user = User(
             **user_data,
             password=hashed_password,
+            role=Role.USER
         )
 
         session.add(new_user)

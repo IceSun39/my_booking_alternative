@@ -20,6 +20,10 @@ class UserCreate(UserBase):
     role: Annotated[Role, Field(default=Role.USER)]
 
 
+class UserRegister(UserBase):
+    password: Annotated[str, Field(min_length=1)]
+
+
 class UserUpdate(BaseModel):
     email: Annotated[Optional[str], Field(min_length=1)] = None
     username: Annotated[Optional[str], Field(min_length=1)] = None
