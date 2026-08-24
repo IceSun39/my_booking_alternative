@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 
-from src.backend.models.properties import Property
+from src.backend.models import Property, User, Role
 from src.backend.schemas.properties_schemas import PropertiesCreate, PropertiesUpdate, PropertiesResponse
 
 
@@ -35,6 +35,13 @@ class PropertyService:
         property = result.scalar_one_or_none()
         if property:
             raise HTTPException(status_code=409, detail="Property with this name already exists")
+
+        stmt_owners = select(User.user_id).where(User.role == Role.OWNER)
+        result = await session.execute(stmt_owners)
+        owners = result.scalars().all()
+
+        if properties_create.owner_id not in owners:
+            raise HTTPException(status_code=404, detail="Owner not found.")
 
         property_data = properties_create.model_dump()
         new_property = Property(**property_data)
