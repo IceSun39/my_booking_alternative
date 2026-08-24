@@ -6,9 +6,12 @@ from typing import List
 
 from src.backend.database.database import get_session
 from src.backend.core.dependencies import get_current_user
-from src.backend.models.users import User, Role
+from src.backend.models.users import User
 from src.backend.schemas.bookings_schemas import BookingCreate, BookingUpdate, BookingResponse
 from src.backend.services.booking_services import BookingService
+from src.backend.tasks.email_tasks import send_email
+
+sender_email = "vlad.dev.3241@gmail.com"
 
 booking_router = APIRouter(
     prefix="/api/bookings",
@@ -63,7 +66,35 @@ async def create_booking(
         session: AsyncSession = Depends(get_session),
         current_user: User = Depends(get_current_user)
 ):
-    return await BookingService.create_booking(session, booking_create, current_user.user_id)
+    booking = await BookingService.create_booking(session, booking_create, current_user.user_id)
+
+    subject = "🏨 Ваше бронювання успішно підтверджено!"
+    message = f"Вітаємо! Ви успішно забронювали номер з {booking.check_in} по {booking.check_out}. Сума: {booking.total_price}."
+
+    message_html = f"""
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2 style="color: #2c3e50;">Дякуємо за бронювання!</h2>
+            <p>Вітаємо!</p>
+            <p>Ваше бронювання успішно створено та підтверджено. Ось деталі:</p>
+            <ul style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; list-style-type: none;">
+                <li>📅 <b>Дата заїзду:</b> {booking.check_in}</li>
+                <li>📅 <b>Дата виїзду:</b> {booking.check_out}</li>
+                <li>👥 <b>Кількість гостей:</b> {booking.guests}</li>
+                <li>💰 <b>До сплати:</b> {booking.total_price} грн</li>
+            </ul>
+            <p>Чекаємо на вас!</p>
+        </div>
+        """
+
+    send_email.delay(
+        subject=subject,
+        message=message,
+        message_html=message_html,
+        from_email=sender_email,
+        to_email=current_user.email
+    )
+
+    return booking
 
 
 @booking_router.put("/{booking_id}", response_model=BookingResponse, status_code=status.HTTP_202_ACCEPTED)
