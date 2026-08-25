@@ -41,24 +41,13 @@ class Booking(Base):
         default=RoomType.PRIVATE,
     )
 
-    __table_args__ = (
+    ___table_args__ = (
         ExcludeConstraint(
-            (
-                text(
-                    """
-                    CASE
-                        WHEN room_type = 'PRIVATE'
-                             AND status IN ('PENDING', 'CONFIRMED')
-                        THEN room_id
-                        ELSE NULL
-                    END
-                    """
-                ),
-                "=",
-            ),
-            (
-                text("daterange(check_in, check_out)"),
-                "&&",
+            ("room_id", "="),
+            (text("daterange(check_in, check_out)"), "&&"),
+            where=text(
+                "room_type = 'PRIVATE' "
+                "AND status IN ('PENDING', 'CONFIRMED')"
             ),
             name="exclude_overlapping_private_bookings",
         ),

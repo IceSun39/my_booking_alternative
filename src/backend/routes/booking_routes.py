@@ -8,7 +8,7 @@ from src.backend.database.database import get_session
 from src.backend.core.dependencies import get_current_user
 from src.backend.models.users import User
 from src.backend.schemas.bookings_schemas import BookingCreate, BookingUpdate, BookingResponse
-from src.backend.services.booking_services import booking_service
+from src.backend.services.booking_services import BookingService
 from src.backend.tasks.email_tasks import send_email
 
 sender_email = "vlad.dev.3241@gmail.com"
@@ -17,7 +17,7 @@ booking_router = APIRouter(
     prefix="/api/bookings",
     tags=["booking"],
 )
-booking_service = booking_service()
+booking_service = BookingService()
 
 
 async def check_user_owner_booking(
