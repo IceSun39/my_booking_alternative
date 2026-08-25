@@ -1,12 +1,13 @@
 from decimal import Decimal
 from typing import TYPE_CHECKING
 from datetime import date
-from sqlalchemy import ForeignKey, Integer, Float, Date, Enum, Numeric, text
+from sqlalchemy import ForeignKey, Integer, Date, Enum, Numeric, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 import enum
 
 from src.backend.database import Base
+from src.backend.models.rooms import RoomType
 
 if TYPE_CHECKING:
     from .users import User
@@ -34,6 +35,7 @@ class Booking(Base):
 
     total_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     status: Mapped[BookingStatus] = mapped_column(Enum(BookingStatus), default=BookingStatus.PENDING)
+    is_shared: Mapped[RoomType] = mapped_column(Enum(RoomType), default=RoomType.PRIVATE)
 
     __table_args__ = (
         ExcludeConstraint(

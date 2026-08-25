@@ -1,7 +1,8 @@
 from decimal import Decimal
+import enum
 
 from typing import List, TYPE_CHECKING
-from sqlalchemy import String, ForeignKey, Integer, Boolean, Numeric
+from sqlalchemy import String, ForeignKey, Integer, Boolean, Numeric, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.backend.database import Base
@@ -14,6 +15,10 @@ if TYPE_CHECKING:
     from .amenities import Amenity
 
 
+class RoomType(enum.Enum):
+    PRIVATE = "private"
+    SHARED = 'shared'
+
 class Room(Base):
     __tablename__ = "rooms"
 
@@ -23,7 +28,7 @@ class Room(Base):
     name: Mapped[str] = mapped_column(String)
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     capacity: Mapped[int] = mapped_column(Integer)
-    is_contains_several_groups: Mapped[bool] = mapped_column(Boolean)
+    is_shared: Mapped[RoomType] = mapped_column(Enum(RoomType, default=RoomType.PRIVATE))
 
     property: Mapped["Property"] = relationship(back_populates="rooms")
     bookings: Mapped[List["Booking"]] = relationship(back_populates="room")
