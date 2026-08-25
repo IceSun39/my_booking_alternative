@@ -1,6 +1,6 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
-from sqlalchemy import NullPool
+from sqlalchemy import NullPool, text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 from src.backend.main import app
@@ -28,6 +28,7 @@ app.dependency_overrides[get_session] = override_get_session
 @pytest.fixture(autouse=True)
 async def setup_db():
     async with engine_test.begin() as conn:
+	await conn.execute(text("CREATE EXTENSION IF NOT EXISTS btree_gist"))
         await conn.run_sync(Base.metadata.create_all)
 
     yield

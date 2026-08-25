@@ -56,6 +56,7 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['property_id'], ['properties.property_id'], ),
     sa.PrimaryKeyConstraint('room_id')
     )
+    op.execute("CREATE EXTENSION IF NOT EXISTS btree_gist")
     op.create_table('bookings',
     sa.Column('booking_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
