@@ -46,4 +46,4 @@ coverage.xml
 nosetests.xml
 
 *.txt
-*.ini
+!requirements.txt
