@@ -28,7 +28,7 @@ app.dependency_overrides[get_session] = override_get_session
 @pytest.fixture(autouse=True)
 async def setup_db():
     async with engine_test.begin() as conn:
-	await conn.execute(text("CREATE EXTENSION IF NOT EXISTS btree_gist"))
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS btree_gist"))
         await conn.run_sync(Base.metadata.create_all)
 
     yield
