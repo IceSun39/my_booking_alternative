@@ -12,6 +12,12 @@ from datetime import date
 
 RoomService = RoomService()
 
+# Bookings only with this statuses will be findings in database for
+# checking date collisions
+ACTIVE_BOOKING_STATUSES = {
+    BookingStatus.PENDING,
+    BookingStatus.CONFIRMED,
+}
 
 class BookingService:
     async def _get_booking_in_db(
@@ -19,7 +25,7 @@ class BookingService:
             session: AsyncSession,
             booking_id: int
     ) -> Optional[Booking]:
-        """Метод знаходить бронювання по id"""
+        """Helper method for getting booking by id"""
         stmt = select(Booking).where(Booking.booking_id == booking_id)
         result = await session.execute(stmt)
         booking = result.scalar_one_or_none()
@@ -36,15 +42,16 @@ class BookingService:
             check_out: date,
             exclude_booking_id: Optional[int] = None
     ) -> List[Booking]:
-        """Метод знаходить всі бронювання, які перетинаються з нашими датами"""
-        # Створюємо базовий запит
+        """Method finds all bookings there cross dates"""
+        # Basic statement
         stmt = select(Booking).where(
             Booking.room_id == room_id,
             check_in < Booking.check_out,
-            check_out > Booking.check_in
+            check_out > Booking.check_in,
+            Booking.status.in_(ACTIVE_BOOKING_STATUSES),
         )
 
-        # Якщо ми оновлюємо бронювання, виключаємо його ж ID з перевірки
+        # Exclude booking if we're updating it
         if exclude_booking_id:
             stmt = stmt.where(Booking.booking_id != exclude_booking_id)
 
@@ -59,32 +66,32 @@ class BookingService:
             room: Room,
             exclude_booking_id: Optional[int] = None
     ) -> bool:
-        """Метод спершу рахує кількість гостей, які будуть у кімнаті в конкретні дати й потім перевіряє чи влазять туди нові гості"""
+        """Method checks whether there are any available places in the room"""
         bookings = await self._find_all_bookings_for_room(session, room.room_id, booking.check_in, booking.check_out,
                                                           exclude_booking_id)
 
-        # Якщо записів немає, то нічого заважати й не може
+        # Nothing is gets in the way, if there are no bookings
         if not bookings:
             return True
         total_days = (booking.check_out - booking.check_in).days
-        # Створюємо масив із нулів для кожного дня нашого проживання
+        # Create a list of zeros whose length is equal to the number of days of stay
         guests_per_day = [0] * total_days
 
         for books in bookings:
-            # Індекс початку: якщо вони заїхали раніше за нас, то для нас вони є з 0-го дня
+            # Start Date: If they arrived before us, then for us they are counted starting on Day 0
             start_day = max(0, (books.check_in - booking.check_in).days)
 
-            # Індекс кінця: якщо вони виїжджають пізніше за нас, обрізаємо по наш останній день
+            # Final Date: If they're leaving later than us, we'll cut it off at our last day
             end_day = min(total_days, (books.check_out - booking.check_in).days)
 
-            # Додаємо кількість гостей для кожного дня перетину
+            # Add number of guests for every day
             for i in range(start_day, end_day):
                 guests_per_day[i] += books.guests
 
-        # Перевіряємо, чи вистачить місця для нових гостей у КОЖЕН із днів
+        # Check if there's enough space for new guests on EVERY single day
         for current_guests in guests_per_day:
             if room.capacity - current_guests < booking.guests:
-                return False  # Знайшли день, коли місць не вистачає
+                return False  # Find day, when not enough space
 
         return True
 
@@ -95,11 +102,10 @@ class BookingService:
             room: Room,
             exclude_booking_id: Optional[int] = None
     ) -> bool:
-        """Метод перевіряє чи кімната пуста в задані дати"""
+        """Methods checks whether the room is available on the specified dates"""
         bookings = await self._find_all_bookings_for_room(session, room.room_id, booking.check_in, booking.check_out,
                                                           exclude_booking_id)
 
-        # Якщо в кімнати взагалі немає записів, то ласкаво просимо
         if not bookings:
             return True
 
@@ -112,7 +118,7 @@ class BookingService:
             room: Room,
             exclude_booking_id: Optional[int] = None
     ) -> bool:
-        """Перевіряє чи вільна кімната для запису"""
+        """Checks to see if the recording room is available"""
 
         if room.is_contains_several_groups:
             return await self._check_booking_dates_for_hostel_rooms(session, booking, room, exclude_booking_id)
@@ -124,6 +130,7 @@ class BookingService:
             session: AsyncSession,
             booking_id: int
     ) -> Optional[BookingResponse]:
+        """Return booking response model by id"""
         booking = await self._get_booking_in_db(session, booking_id)
         return BookingResponse.model_validate(booking)
 
@@ -132,6 +139,7 @@ class BookingService:
             session: AsyncSession,
             user_id: int
     ) -> List[BookingResponse]:
+        """Return all user's bookings"""
         stmt = select(Booking).where(Booking.user_id == user_id)
         result = await session.execute(stmt)
         bookings = result.scalars().all()
@@ -144,8 +152,10 @@ class BookingService:
             booking_create: BookingCreate,
             user_id: int
     ) -> BookingResponse:
+        """Create new booking"""
         room = await RoomService._get_room_in_db(session, booking_create.room_id)
 
+        # Check if room is available
         is_available = await self._check_booking_available(session, booking_create, room)
 
         if not is_available:
@@ -154,6 +164,7 @@ class BookingService:
                 detail="Not enough room available for these dates"
             )
 
+        # Calculate the price
         total_price = room.price * (booking_create.check_out - booking_create.check_in).days
         booking_data = booking_create.model_dump()
         new_booking = Booking(
@@ -169,6 +180,7 @@ class BookingService:
             await session.refresh(new_booking)
             return BookingResponse.model_validate(new_booking)
 
+        # If not enough room
         except IntegrityError as e:
             await session.rollback()
 
@@ -185,6 +197,7 @@ class BookingService:
             booking_update: BookingUpdate,
             booking_id: int
     ) -> Optional[BookingResponse]:
+        """Updates booking by id"""
         existing_booking = await self._get_booking_in_db(session, booking_id)
         update_data = booking_update.model_dump(exclude_unset=True)
 
@@ -196,7 +209,7 @@ class BookingService:
         booking_to_check = BookingBase(check_in=check_in, check_out=check_out, guests=guests)
         room = await RoomService._get_room_in_db(session, room_id)
 
-
+        # Checking if is available
         is_available = await self._check_booking_available(session, booking_to_check, room,
                                                            exclude_booking_id=booking_id)
 
@@ -206,7 +219,7 @@ class BookingService:
                 detail="Not enough room available for these dates"
             )
 
-
+        # If check in, check out date or room is changing, needs to recalculate the price
         if (check_in != existing_booking.check_in or
                 check_out != existing_booking.check_out or
                 room_id != existing_booking.room_id):
@@ -226,6 +239,7 @@ class BookingService:
             session: AsyncSession,
             booking_id: int
     ) -> None:
+        """Deletes booking by id"""
         booking = await self._get_booking_in_db(session, booking_id)
 
         await session.delete(booking)
