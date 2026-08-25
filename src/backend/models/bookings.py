@@ -35,13 +35,32 @@ class Booking(Base):
 
     total_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     status: Mapped[BookingStatus] = mapped_column(Enum(BookingStatus), default=BookingStatus.PENDING)
-    is_shared: Mapped[RoomType] = mapped_column(Enum(RoomType), default=RoomType.PRIVATE)
+    room_type: Mapped[RoomType] = mapped_column(
+        Enum(RoomType),
+        nullable=False,
+        default=RoomType.PRIVATE,
+    )
 
     __table_args__ = (
         ExcludeConstraint(
-            ("room_id", "="),
-            (text("daterange(check_in, check_out)"), "&&"),
-            name="exclude_overlapping_bookings"
+            (
+                text(
+                    """
+                    CASE
+                        WHEN room_type = 'PRIVATE'
+                             AND status IN ('PENDING', 'CONFIRMED')
+                        THEN room_id
+                        ELSE NULL
+                    END
+                    """
+                ),
+                "=",
+            ),
+            (
+                text("daterange(check_in, check_out)"),
+                "&&",
+            ),
+            name="exclude_overlapping_private_bookings",
         ),
     )
 

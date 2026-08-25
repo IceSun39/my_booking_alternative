@@ -19,6 +19,7 @@ class RoomType(enum.Enum):
     PRIVATE = "private"
     SHARED = 'shared'
 
+
 class Room(Base):
     __tablename__ = "rooms"
 
@@ -28,7 +29,11 @@ class Room(Base):
     name: Mapped[str] = mapped_column(String)
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     capacity: Mapped[int] = mapped_column(Integer)
-    is_shared: Mapped[RoomType] = mapped_column(Enum(RoomType, default=RoomType.PRIVATE))
+    room_type: Mapped[RoomType] = mapped_column(
+        Enum(RoomType),
+        nullable=False,
+        default=RoomType.PRIVATE,
+    )
 
     property: Mapped["Property"] = relationship(back_populates="rooms")
     bookings: Mapped[List["Booking"]] = relationship(back_populates="room")
