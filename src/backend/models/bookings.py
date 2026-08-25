@@ -1,6 +1,7 @@
+from decimal import Decimal
 from typing import TYPE_CHECKING
 from datetime import date
-from sqlalchemy import ForeignKey, Integer, Float, Date, Enum, Column, text
+from sqlalchemy import ForeignKey, Integer, Float, Date, Enum, Numeric, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 import enum
@@ -31,7 +32,7 @@ class Booking(Base):
     check_out: Mapped[date] = mapped_column(Date)
     guests: Mapped[int] = mapped_column(Integer)
 
-    total_price: Mapped[float] = mapped_column(Float)
+    total_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     status: Mapped[BookingStatus] = mapped_column(Enum(BookingStatus), default=BookingStatus.PENDING)
 
     __table_args__ = (

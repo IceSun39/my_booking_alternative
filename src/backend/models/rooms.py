@@ -1,5 +1,7 @@
+from decimal import Decimal
+
 from typing import List, TYPE_CHECKING
-from sqlalchemy import String, ForeignKey, Float, Integer, Boolean
+from sqlalchemy import String, ForeignKey, Integer, Boolean, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.backend.database import Base
@@ -19,7 +21,7 @@ class Room(Base):
     property_id: Mapped[int] = mapped_column(ForeignKey("properties.property_id"))
 
     name: Mapped[str] = mapped_column(String)
-    price: Mapped[float] = mapped_column(Float)
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     capacity: Mapped[int] = mapped_column(Integer)
     is_contains_several_groups: Mapped[bool] = mapped_column(Boolean)
 

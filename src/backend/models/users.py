@@ -25,7 +25,7 @@ class User(Base):
     user_id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String, unique=True)
     password: Mapped[str] = mapped_column(String)
-    username: Mapped[str] = mapped_column(String)
+    username: Mapped[str] = mapped_column(String, unique=True, index=True)
     phone_number: Mapped[str] = mapped_column(String, nullable=True)
     role: Mapped[Role] = mapped_column(Enum(Role))
 
