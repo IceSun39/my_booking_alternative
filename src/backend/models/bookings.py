@@ -41,7 +41,7 @@ class Booking(Base):
         default=RoomType.PRIVATE,
     )
 
-    ___table_args__ = (
+    __table_args__ = (
         ExcludeConstraint(
             ("room_id", "="),
             (text("daterange(check_in, check_out)"), "&&"),

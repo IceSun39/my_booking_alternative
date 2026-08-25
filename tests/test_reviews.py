@@ -1,5 +1,6 @@
 import pytest
 import datetime
+from src.backend.models import RoomType
 from httpx import AsyncClient
 from sqlalchemy import select
 
@@ -41,7 +42,7 @@ async def setup_review_data():
         await session.flush()
         prop_id = prop.property_id
 
-        room = Room(property_id=prop_id, name="Lux", capacity=2, price=100, is_contains_several_groups=False)
+        room = Room(property_id=prop_id, name="Lux", capacity=2, price=100, room_type=RoomType.PRIVATE)
         session.add(room)
         await session.flush()
         room_id = room.room_id

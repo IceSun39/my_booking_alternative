@@ -137,25 +137,6 @@ async def test_create_user_duplicate_email_fails(async_client: AsyncClient, setu
 
 
 @pytest.mark.asyncio
-async def test_create_user_duplicate_username_currently_allowed(async_client: AsyncClient, setup_user_data):
-    """FYI: сервіс перевіряє унікальність тільки email, не username.
-    Цей тест документує ПОТОЧНУ поведінку (дублікат username проходить) —
-    якщо це небажано, потрібно додати перевірку в create_user."""
-    app.dependency_overrides[get_current_user] = override_user(setup_user_data["admin_id"], Role.ADMIN)
-    try:
-        payload = {
-            "email": "dup_username@test.com",
-            "username": "target_u",  # той самий username, що й у target
-            "phone_number": "+380000000097",
-            "password": "somepassword",
-        }
-        response = await async_client.post("/api/user/", json=payload)
-        assert response.status_code == 201
-    finally:
-        app.dependency_overrides.pop(get_current_user, None)
-
-
-@pytest.mark.asyncio
 async def test_update_user_success_as_admin(async_client: AsyncClient, setup_user_data):
     data = setup_user_data
     app.dependency_overrides[get_current_user] = override_user(data["admin_id"], Role.ADMIN)

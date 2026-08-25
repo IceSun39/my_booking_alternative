@@ -3,6 +3,7 @@ from httpx import AsyncClient
 from src.backend.main import app
 from src.backend.core.dependencies import get_admin_user, get_owner_or_admin_user
 from src.backend.models.users import User, Role
+from src.backend.models.rooms import RoomType
 from tests.conftest import TestingSessionLocal
 from src.backend.models import Property, Room
 
@@ -179,7 +180,7 @@ async def test_update_room_amenities(async_client: AsyncClient):
             name="Люкс",
             capacity=2,
             price=1500,
-            is_contains_several_groups=False,
+            room_type=RoomType.PRIVATE,
         )
         session.add(new_room)
         await session.flush()

@@ -3,7 +3,7 @@ from httpx import AsyncClient
 
 from src.backend.main import app
 from tests.conftest import TestingSessionLocal
-from src.backend.models import User, Role, Property, Room
+from src.backend.models import User, Role, Property, Room, RoomType
 from src.backend.core.dependencies import get_current_user
 
 
@@ -46,7 +46,7 @@ async def setup_room_data():
             name="Standard",
             capacity=2,
             price=80,
-            is_contains_several_groups=False
+            room_type=RoomType.PRIVATE
         )
         session.add(room)
         await session.flush()
@@ -98,7 +98,7 @@ async def test_create_room_success(async_client: AsyncClient, setup_room_data):
             "capacity": 3,
             "property_id": data["property_id"],
             "amenities": [],
-            "is_contains_several_groups": False,
+            "room_type": "private",
         }
         response = await async_client.post("/api/rooms/", json=payload)
         assert response.status_code == 201, response.json()

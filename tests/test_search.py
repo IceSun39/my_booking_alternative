@@ -2,7 +2,7 @@ import datetime
 import pytest
 
 from tests.conftest import TestingSessionLocal
-from src.backend.models import Property, Room, Booking, Amenity, User, Role
+from src.backend.models import Property, Room, Booking, Amenity, User, Role, RoomType
 from src.backend.models.amenities import AmenityType
 from src.backend.models.associations import room_amenities
 from src.backend.models.bookings import BookingStatus
@@ -45,9 +45,9 @@ async def setup_search_data():
         property_b_id = prop_b.property_id
         property_c_id = prop_c.property_id
 
-        room_a = Room(property_id=prop_a.property_id, name="A1", capacity=2, price=100, is_contains_several_groups=False)
-        room_b = Room(property_id=prop_b.property_id, name="B1", capacity=4, price=200, is_contains_several_groups=False)
-        room_c = Room(property_id=prop_c.property_id, name="C1", capacity=2, price=80, is_contains_several_groups=False)
+        room_a = Room(property_id=prop_a.property_id, name="A1", capacity=2, price=100, room_type=RoomType.PRIVATE)
+        room_b = Room(property_id=prop_b.property_id, name="B1", capacity=4, price=200, room_type=RoomType.PRIVATE)
+        room_c = Room(property_id=prop_c.property_id, name="C1", capacity=2, price=80, room_type=RoomType.PRIVATE)
         session.add_all([room_a, room_b, room_c])
         await session.flush()
 
