@@ -12,12 +12,12 @@ search_router = APIRouter(
     prefix="/api/search",
     tags=["search"],
 )
-SearchServices = SearchServices()
+search_services = SearchServices()
 
 @search_router.get("/", response_model=List[PropertiesResponse])
 async def search_properties(
         filters: SearchFilter = Depends(),
         session: AsyncSession = Depends(get_session),
 ):
-    return await SearchServices.find_available_properties(session, filters)
+    return await search_services.find_available_properties(session, filters)
 

@@ -13,7 +13,7 @@ properties_router = APIRouter(
     tags=["properties"],
 )
 
-PropertyService = PropertyService()
+property_service = PropertyService()
 
 
 async def check_owner_or_admin(
@@ -22,7 +22,7 @@ async def check_owner_or_admin(
         property_id: int,
         current_user: User
 ) -> bool:
-    existing_property = await PropertyService.get_property(session=session, property_id=property_id)
+    existing_property = await property_service.get_property(session=session, property_id=property_id)
     if existing_property.owner_id == owner.user_id or current_user.is_admin:
         return True
     raise HTTPException(
@@ -34,13 +34,13 @@ async def check_owner_or_admin(
 @properties_router.get("/{property_id}", response_model=PropertiesResponse)
 async def get_property_by_id(property_id: int, session: AsyncSession = Depends(get_session)):
     """Отримати готель по id"""
-    return await PropertyService.get_property(session=session, property_id=property_id)
+    return await property_service.get_property(session=session, property_id=property_id)
 
 
 @properties_router.get("/", response_model=List[PropertiesResponse])
 async def get_all_properties(session: AsyncSession = Depends(get_session)):
     """Отримати список всіх готелів"""
-    return await PropertyService.get_all_properties(session=session)
+    return await property_service.get_all_properties(session=session)
 
 
 @properties_router.post("/", response_model=PropertiesResponse)
@@ -51,7 +51,7 @@ async def create_property(
 ):
     """Створити власність, може тільки адмін або власник"""
     if current_user.role in [Role.ADMIN, Role.OWNER]:
-        return await PropertyService.create_property(session=session, properties_create=property_create)
+        return await property_service.create_property(session=session, properties_create=property_create)
     raise HTTPException(
         status_code=403,
         detail="Access Denied",
@@ -67,7 +67,7 @@ async def update_property(
 ):
     """"Оновити дані про власність"""
     if await check_owner_or_admin(session=session, owner=current_user, property_id=property_id, current_user=current_user):
-        return await PropertyService.update_property(session=session, property_id=property_id, properties_update=property_update)
+        return await property_service.update_property(session=session, property_id=property_id, properties_update=property_update)
     raise HTTPException(
         status_code=403,
         detail="Access Denied",
@@ -82,7 +82,7 @@ async def delete_property(
 ):
     """Видалити власність"""
     if await check_owner_or_admin(session=session, owner=current_user, property_id=property_id,current_user=current_user):
-        await PropertyService.delete_property(session=session, property_id=property_id)
+        await property_service.delete_property(session=session, property_id=property_id)
         return
     raise HTTPException(
         status_code=403,

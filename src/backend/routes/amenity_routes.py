@@ -24,8 +24,8 @@ room_amenity_router = APIRouter(
     tags=["amenity"],
 )
 
-AmenityServices = AmenityServices()
-RoomService = RoomService()
+amenity_services = AmenityServices()
+room_service = RoomService()
 
 
 @property_amenity_router.get("/", response_model=List[AmenityResponse], status_code=status.HTTP_200_OK)
@@ -34,7 +34,7 @@ async def get_property_amenities(
         session: AsyncSession = Depends(get_session)
 ):
     """Get property amenities"""
-    return await AmenityServices.get_property_amenities(session, property_id)
+    return await amenity_services.get_property_amenities(session, property_id)
 
 
 @room_amenity_router.get("/", response_model=List[AmenityResponse], status_code=status.HTTP_200_OK)
@@ -43,7 +43,7 @@ async def get_room_amenities(
         session: AsyncSession = Depends(get_session)
 ):
     """Get room amenities"""
-    return await AmenityServices.get_room_amenities(session, room_id)
+    return await amenity_services.get_room_amenities(session, room_id)
 
 
 @amenity_router.get("/", response_model=List[AmenityResponse], status_code=status.HTTP_200_OK)
@@ -52,7 +52,7 @@ async def get_amenities(
         session: AsyncSession = Depends(get_session),
 ):
     """Get amenities"""
-    return await AmenityServices.get_all_amenities(session, amenity_type)
+    return await amenity_services.get_all_amenities(session, amenity_type)
 
 
 @amenity_router.post("/", response_model=AmenityResponse, status_code=status.HTTP_201_CREATED)
@@ -62,7 +62,7 @@ async def create_amenity(
         admin: User = Depends(get_admin_user)
 ):
     """Create new amenity"""
-    return await AmenityServices.create_amenity(session, amenity_create)
+    return await amenity_services.create_amenity(session, amenity_create)
 
 
 @amenity_router.put("/{amenity_id}", response_model=AmenityResponse, status_code=status.HTTP_202_ACCEPTED)
@@ -73,7 +73,7 @@ async def update_amenity(
         admin: User = Depends(get_admin_user)
 ):
     """Update amenity"""
-    return await AmenityServices.update_amenity(session, amenity_update, amenity_id)
+    return await amenity_services.update_amenity(session, amenity_update, amenity_id)
 
 
 @property_amenity_router.put("/", response_model=List[AmenityResponse], status_code=status.HTTP_202_ACCEPTED)
@@ -83,7 +83,7 @@ async def update_property_amenities(
         session: AsyncSession = Depends(get_session),
         current_user: User = Depends(get_owner_or_admin_user)
 ):
-    is_owner = await RoomService.check_user_is_owner_by_property(
+    is_owner = await room_service.check_user_is_owner_by_property(
         session=session,
         property_id=property_id,
         owner_id=current_user.user_id
@@ -95,7 +95,7 @@ async def update_property_amenities(
             detail="You do not have permission to perform this action"
         )
 
-    return await AmenityServices.update_property_amenities(
+    return await amenity_services.update_property_amenities(
         session=session,
         property_id=property_id,
         amenity_ids=amenity_data.amenity_ids
@@ -109,7 +109,7 @@ async def update_room_amenities(
         session: AsyncSession = Depends(get_session),
         current_user: User = Depends(get_owner_or_admin_user)
 ):
-    is_owner = await RoomService.check_user_is_owner_by_room(
+    is_owner = await room_service.check_user_is_owner_by_room(
         session=session,
         room_id=room_id,
         owner_id=current_user.user_id
@@ -119,7 +119,7 @@ async def update_room_amenities(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="You do not have permission to perform this action")
 
-    return await AmenityServices.update_room_amenities(
+    return await amenity_services.update_room_amenities(
         session=session,
         room_id=room_id,
         amenity_ids=amenity_data.amenity_ids
@@ -133,4 +133,4 @@ async def delete_amenity(
         admin: User = Depends(get_admin_user)
 ):
     """Delete amenity"""
-    await AmenityServices.delete_amenity(session, amenity_id)
+    await amenity_services.delete_amenity(session, amenity_id)

@@ -10,7 +10,7 @@ from src.backend.schemas.bookings_schemas import BookingCreate, BookingUpdate, B
 from src.backend.services.rooms_services import RoomService
 from datetime import date
 
-RoomService = RoomService()
+room_service = RoomService()
 
 # Bookings only with this statuses will be findings in database for
 # checking date collisions
@@ -153,7 +153,7 @@ class BookingService:
             user_id: int
     ) -> BookingResponse:
         """Create new booking"""
-        room = await RoomService._get_room_in_db(session, booking_create.room_id)
+        room = await room_service._get_room_in_db(session, booking_create.room_id)
 
         # Check if room is available
         is_available = await self._check_booking_available(session, booking_create, room)
@@ -207,7 +207,7 @@ class BookingService:
         room_id = update_data.get("room_id", existing_booking.room_id)
 
         booking_to_check = BookingBase(check_in=check_in, check_out=check_out, guests=guests)
-        room = await RoomService._get_room_in_db(session, room_id)
+        room = await room_service._get_room_in_db(session, room_id)
 
         # Checking if is available
         is_available = await self._check_booking_available(session, booking_to_check, room,

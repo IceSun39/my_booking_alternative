@@ -8,7 +8,7 @@ from src.backend.database.database import get_session
 from src.backend.core.dependencies import get_current_user
 from src.backend.models.users import User
 from src.backend.schemas.bookings_schemas import BookingCreate, BookingUpdate, BookingResponse
-from src.backend.services.booking_services import BookingService
+from src.backend.services.booking_services import booking_service
 from src.backend.tasks.email_tasks import send_email
 
 sender_email = "vlad.dev.3241@gmail.com"
@@ -17,7 +17,7 @@ booking_router = APIRouter(
     prefix="/api/bookings",
     tags=["booking"],
 )
-BookingService = BookingService()
+booking_service = booking_service()
 
 
 async def check_user_owner_booking(
@@ -41,7 +41,7 @@ async def my_bookings(
         current_user: User = Depends(get_current_user),
         session: AsyncSession = Depends(get_session)
 ):
-    return await BookingService.get_all_user_bookings(session, current_user.user_id)
+    return await booking_service.get_all_user_bookings(session, current_user.user_id)
 
 
 @booking_router.get("/{booking_id}", response_model=BookingResponse, status_code=status.HTTP_200_OK)
@@ -53,7 +53,7 @@ async def get_booking(
     is_owner = await check_user_owner_booking(session, booking_id, current_user)
 
     if is_owner or current_user.is_admin:
-        return await BookingService.get_booking(session, booking_id)
+        return await booking_service.get_booking(session, booking_id)
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail="You do not have permission to perform this action"
@@ -66,7 +66,7 @@ async def create_booking(
         session: AsyncSession = Depends(get_session),
         current_user: User = Depends(get_current_user)
 ):
-    booking = await BookingService.create_booking(session, booking_create, current_user.user_id)
+    booking = await booking_service.create_booking(session, booking_create, current_user.user_id)
 
     subject = "🏨 Ваше бронювання успішно підтверджено!"
     message = f"Вітаємо! Ви успішно забронювали номер з {booking.check_in} по {booking.check_out}. Сума: {booking.total_price}."
@@ -107,7 +107,7 @@ async def update_booking(
     is_owner = await check_user_owner_booking(session, booking_id, current_user)
 
     if is_owner or current_user.is_admin:
-        return await BookingService.update_booking(session, booking_update, booking_id)
+        return await booking_service.update_booking(session, booking_update, booking_id)
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -124,7 +124,7 @@ async def delete_booking(
     is_owner = await check_user_owner_booking(session, booking_id, current_user)
 
     if is_owner or current_user.is_admin:
-        await BookingService.delete_booking(session, booking_id)
+        await booking_service.delete_booking(session, booking_id)
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,

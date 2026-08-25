@@ -18,8 +18,8 @@ review_router = APIRouter(
     prefix="/api/reviews",
     tags=["reviews"],
 )
-ReviewService = ReviewService()
-BookingService = BookingService()
+review_service = ReviewService()
+booking_service = BookingService()
 
 
 async def check_is_user_review_owner(
@@ -27,7 +27,7 @@ async def check_is_user_review_owner(
         user: User,
         session: AsyncSession
 ) -> bool:
-    review = await ReviewService.get_review(session=session, review_id=review_id)
+    review = await review_service.get_review(session=session, review_id=review_id)
 
     if review.user_id != user.user_id:
         raise HTTPException(
@@ -44,7 +44,7 @@ async def get_property_reviews(
         session: AsyncSession = Depends(get_session),
         current_user: User = Depends(get_current_user)
 ):
-    return await ReviewService.get_property_reviews(session, property_id)
+    return await review_service.get_property_reviews(session, property_id)
 
 
 @review_property_router.get("/{room_id}", response_model=List[ReviewResponse])
@@ -53,7 +53,7 @@ async def get_room_review(
         session: AsyncSession = Depends(get_session),
         current_user: User = Depends(get_current_user)
 ):
-    return await ReviewService.get_room_reviews(session, room_id)
+    return await review_service.get_room_reviews(session, room_id)
 
 
 @review_property_router.post("/", response_model=ReviewResponse)
@@ -63,7 +63,7 @@ async def create_property_review(
         session: AsyncSession = Depends(get_session),
         current_user: User = Depends(get_current_user)
 ):
-    booking = await BookingService.get_booking(session=session, booking_id=review_create.booking_id)
+    booking = await booking_service.get_booking(session=session, booking_id=review_create.booking_id)
 
     if booking.user_id != current_user.user_id:
         raise HTTPException(
@@ -77,7 +77,7 @@ async def create_property_review(
             detail="You can't review a booking before check-out"
         )
 
-    return await ReviewService.create_review(
+    return await review_service.create_review(
         session=session,
         review_create=review_create,
         user_id=current_user.user_id,
@@ -93,7 +93,7 @@ async def update_review(
         current_user: User = Depends(get_current_user)
 ):
     if await check_is_user_review_owner(session=session, review_id=review_id, user=current_user):
-        return await ReviewService.update_review(session=session, review_update=review_update, review_id=review_id)
+        return await review_service.update_review(session=session, review_update=review_update, review_id=review_id)
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail="You can change reviews for your own bookings",
@@ -107,4 +107,4 @@ async def delete_review(
         current_user: User = Depends(get_current_user)
 ):
     if await check_is_user_review_owner(session=session, review_id=review_id, user=current_user):
-        await ReviewService.delete_review(session=session, review_id=review_id)
+        await review_service.delete_review(session=session, review_id=review_id)

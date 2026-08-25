@@ -13,10 +13,10 @@ room_router = APIRouter(
     tags=["Room"],
 )
 
-RoomService = RoomService()
+room_service = RoomService()
 
 async def check_user_is_room_owner(session: AsyncSession, room_id: int, current_user: User):
-    is_owner = await RoomService.check_user_is_owner_by_room(
+    is_owner = await room_service.check_user_is_owner_by_room(
         session=session,
         room_id=room_id,
         owner_id=current_user.user_id
@@ -33,13 +33,13 @@ async def check_user_is_room_owner(session: AsyncSession, room_id: int, current_
 @room_router.get("/{room_id}", response_model=RoomResponse)
 async def get_room(room_id: int, session: AsyncSession = Depends(get_session),
                    current_user: User = Depends(get_current_user)):
-    return await RoomService.get_room(session=session, room_id=room_id)
+    return await room_service.get_room(session=session, room_id=room_id)
 
 
 @room_router.post("/", response_model=RoomResponse, status_code=status.HTTP_201_CREATED)
 async def create_room(room: RoomCreate, session: AsyncSession = Depends(get_session),
                       current_user: User = Depends(get_owner_or_admin_user)):
-    is_owner = await RoomService.check_user_is_owner_by_property(
+    is_owner = await room_service.check_user_is_owner_by_property(
         session=session,
         property_id=room.property_id,
         owner_id=current_user.user_id
@@ -51,14 +51,14 @@ async def create_room(room: RoomCreate, session: AsyncSession = Depends(get_sess
             detail="You do not have permission to perform this action"
         )
 
-    return await RoomService.create_room(session=session, room_create=room)
+    return await room_service.create_room(session=session, room_create=room)
 
 
 @room_router.put("/{room_id}", response_model=RoomResponse)
 async def update_room(room: RoomUpdate, room_id: int, session: AsyncSession = Depends(get_session),
                       current_user: User = Depends(get_owner_or_admin_user)):
     if await check_user_is_room_owner(session=session, room_id=room_id, current_user=current_user):
-        return await RoomService.update_room(session=session, room_update=room, room_id=room_id)
+        return await room_service.update_room(session=session, room_update=room, room_id=room_id)
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail="You do not have permission to perform this action"
@@ -69,4 +69,4 @@ async def update_room(room: RoomUpdate, room_id: int, session: AsyncSession = De
 async def delete_room(room_id: int, session: AsyncSession = Depends(get_session),
                       current_user: User = Depends(get_owner_or_admin_user)):
     if await check_user_is_room_owner(session=session, room_id=room_id, current_user=current_user):
-        await RoomService.delete_room(session=session, room_id=room_id)
+        await room_service.delete_room(session=session, room_id=room_id)
