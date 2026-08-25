@@ -45,7 +45,5 @@ htmlcov/
 coverage.xml
 nosetests.xml
 
-*.txt
-*.ini
 certbot/conf/
 certbot/www/
