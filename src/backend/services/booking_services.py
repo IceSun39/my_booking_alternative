@@ -1,3 +1,4 @@
+from src.backend.models.rooms import RoomType
 from typing import Optional, List
 
 from sqlalchemy import select
@@ -19,6 +20,7 @@ ACTIVE_BOOKING_STATUSES = {
     BookingStatus.CONFIRMED,
 }
 
+
 class BookingService:
     async def _get_booking_in_db(
             self,
@@ -33,6 +35,29 @@ class BookingService:
         if booking is None:
             raise HTTPException(status_code=404, detail="Booking not found")
         return booking
+
+    async def _get_room_for_booking(
+            self,
+            session: AsyncSession,
+            room_id: int,
+    ) -> Room:
+        """Returns room for given booking with for update"""
+        stmt = (
+            select(Room)
+            .where(Room.room_id == room_id)
+            .with_for_update()
+        )
+
+        result = await session.execute(stmt)
+        room = result.scalar_one_or_none()
+
+        if room is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Room not found",
+            )
+
+        return room
 
     async def _find_all_bookings_for_room(
             self,
@@ -120,7 +145,7 @@ class BookingService:
     ) -> bool:
         """Checks to see if the recording room is available"""
 
-        if room.is_contains_several_groups:
+        if room.room_type == RoomType.SHARED:
             return await self._check_booking_dates_for_hostel_rooms(session, booking, room, exclude_booking_id)
 
         return await self._check_booking_dates_for_hotel_rooms(session, booking, room, exclude_booking_id)
@@ -153,43 +178,64 @@ class BookingService:
             user_id: int
     ) -> BookingResponse:
         """Create new booking"""
-        room = await room_service._get_room_in_db(session, booking_create.room_id)
 
-        # Check if room is available
-        is_available = await self._check_booking_available(session, booking_create, room)
+        room = await room_service._get_room_in_db(
+            session,
+            booking_create.room_id,
+        )
+
+        # Shared room: lock room row before checking capacity.
+        if room.room_type == RoomType.SHARED:
+            room = await self._get_room_for_booking(
+                session,
+                booking_create.room_id,
+            )
+
+        is_available = await self._check_booking_available(
+            session,
+            booking_create,
+            room,
+        )
 
         if not is_available:
             raise HTTPException(
-                status_code=400,
-                detail="Not enough room available for these dates"
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Not enough room available for these dates",
             )
 
-        # Calculate the price
-        total_price = room.price * (booking_create.check_out - booking_create.check_in).days
-        booking_data = booking_create.model_dump()
+        total_price = (
+                room.price
+                * (booking_create.check_out - booking_create.check_in).days
+        )
+
         new_booking = Booking(
-            **booking_data,
+            **booking_create.model_dump(),
             total_price=total_price,
             user_id=user_id,
-            status=BookingStatus.PENDING
+            status=BookingStatus.PENDING,
+            room_type=room.room_type,
         )
 
         try:
             session.add(new_booking)
             await session.commit()
             await session.refresh(new_booking)
+
             return BookingResponse.model_validate(new_booking)
 
-        # If not enough room
         except IntegrityError as e:
             await session.rollback()
 
-            if "exclude_overlapping_bookings" in str(e.orig):
+            if "exclude_overlapping" in str(e.orig):
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
-                    detail="На жаль, ці дати щойно забронював хтось інший. Оберіть, будь ласка, інші дати."
+                    detail=(
+                        "На жаль, ці дати щойно забронював хтось інший. "
+                        "Оберіть, будь ласка, інші дати."
+                    ),
                 )
-            raise e
+
+            raise
 
     async def update_booking(
             self,
@@ -198,6 +244,7 @@ class BookingService:
             booking_id: int
     ) -> Optional[BookingResponse]:
         """Updates booking by id"""
+
         existing_booking = await self._get_booking_in_db(session, booking_id)
         update_data = booking_update.model_dump(exclude_unset=True)
 
@@ -206,32 +253,58 @@ class BookingService:
         guests = update_data.get("guests", existing_booking.guests)
         room_id = update_data.get("room_id", existing_booking.room_id)
 
-        booking_to_check = BookingBase(check_in=check_in, check_out=check_out, guests=guests)
-        room = await room_service._get_room_in_db(session, room_id)
+        booking_to_check = BookingBase(
+            check_in=check_in,
+            check_out=check_out,
+            guests=guests,
+        )
 
-        # Checking if is available
-        is_available = await self._check_booking_available(session, booking_to_check, room,
-                                                           exclude_booking_id=booking_id)
+        # Get target room
+        room = await room_service._get_room_in_db(
+            session,
+            room_id,
+        )
+
+        # Shared room: lock target room before checking capacity
+        if room.room_type == RoomType.SHARED:
+            room = await self._get_room_for_booking(
+                session,
+                room_id,
+            )
+
+        # Check availability
+        is_available = await self._check_booking_available(
+            session,
+            booking_to_check,
+            room,
+            exclude_booking_id=booking_id,
+        )
 
         if not is_available:
             raise HTTPException(
-                status_code=400,
-                detail="Not enough room available for these dates"
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Not enough room available for these dates",
             )
 
-        # If check in, check out date or room is changing, needs to recalculate the price
-        if (check_in != existing_booking.check_in or
-                check_out != existing_booking.check_out or
-                room_id != existing_booking.room_id):
+        # Recalculate price if dates or room changed
+        if (
+                check_in != existing_booking.check_in
+                or check_out != existing_booking.check_out
+                or room_id != existing_booking.room_id
+        ):
             total_price = room.price * (check_out - check_in).days
             existing_booking.total_price = total_price
 
-
+        # Update fields
         for key, value in update_data.items():
             setattr(existing_booking, key, value)
 
+        # Keep booking room type in sync with the target room
+        existing_booking.room_type = room.room_type
+
         await session.commit()
         await session.refresh(existing_booking)
+
         return BookingResponse.model_validate(existing_booking)
 
     async def delete_booking(
