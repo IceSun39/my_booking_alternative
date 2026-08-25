@@ -1,13 +1,56 @@
-name: Deploy to VPS
+name: CI/CD
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
-    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: new_test_user
+          POSTGRES_PASSWORD: secure_password
+          POSTGRES_DB: booking_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U new_test_user -d booking_test_db"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: "postgresql+asyncpg://new_test_user:secure_password@localhost:5432/booking_test_db"
+      SECRET_KEY: "ci-test-secret-key-not-for-production"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run tests
+        run: uv run pytest -v
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -16,7 +59,16 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
             cd /opt/my_booking_alternative
-            git pull origin main
-            docker compose up -d --build
+            git fetch origin
+            git reset --hard origin/main
+            docker compose build
+            docker compose up -d --force-recreate
+            docker compose exec -T web uv run alembic upgrade head
             docker image prune -f
+
+      - name: Health check
+        run: |
+          sleep 8
+          curl -f https://mybookingalternative.club/docs || exit 1
