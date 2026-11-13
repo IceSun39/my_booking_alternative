@@ -149,7 +149,7 @@ def base_filters(**overrides) -> SearchFilter:
         "max_price": None,
         "amenities": None,
         "sort_by": None,
-        }
+    }
     defaults.update(overrides)
     return SearchFilter(**defaults)
 

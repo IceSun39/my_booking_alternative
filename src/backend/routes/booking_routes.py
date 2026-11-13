@@ -36,7 +36,6 @@ async def check_user_owner_booking(
     return current_user.user_id == booking_owner_id
 
 
-
 @booking_router.get(
     "/my_bookings", response_model=list[BookingResponse], status_code=status.HTTP_200_OK
 )

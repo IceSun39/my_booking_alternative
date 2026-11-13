@@ -55,7 +55,5 @@ def send_email(self, subject, message, message_html, from_email, to_email, **kwa
         raise self.retry(exc=e)
 
     except Exception as e:
-        logger.exception(
-            f"Unexpected error while sending to {to_email}: {e}"
-        )
+        logger.exception(f"Unexpected error while sending to {to_email}: {e}")
         raise
