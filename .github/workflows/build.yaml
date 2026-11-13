@@ -4,10 +4,31 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
 
 jobs:
-  test:
-    uses: ./.github/workflows/test.yaml
+  tests:
+    name: Tests
+    uses: ./.github/workflows/test.yml
+
+  lint:
+    name: Lint
+    uses: ./.github/workflows/lint.yml
+
+  build:
+    name: Build
+    needs: [tests, lint]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build project
+        run: |
+          echo "Tests and lint passed. Starting build..."
