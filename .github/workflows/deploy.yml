@@ -77,4 +77,4 @@ jobs:
         run: uv sync
 
       - name: Run tests
-        run: uv run pytest -vgiyt
+        run: uv run pytest 
