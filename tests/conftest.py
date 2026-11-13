@@ -6,13 +6,17 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from src.backend.database.database import Base, get_session
 from src.backend.main import app
 
-SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://new_test_user:secure_password@localhost:5432/booking_test_db"
+SQLALCHEMY_DATABASE_URL = (
+    "postgresql+asyncpg://new_test_user:secure_password@localhost:5432/booking_test_db"
+)
 
 engine_test = create_async_engine(
     SQLALCHEMY_DATABASE_URL,
     poolclass=NullPool,
 )
-TestingSessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine_test, class_=AsyncSession)
+TestingSessionLocal = async_sessionmaker(
+    autocommit=False, autoflush=False, bind=engine_test, class_=AsyncSession
+)
 
 
 async def override_get_session():

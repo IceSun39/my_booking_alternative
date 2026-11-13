@@ -10,11 +10,14 @@ if TYPE_CHECKING:
     from .rooms import Room
     from .users import User
 
+
 class Favorite(Base):
     __tablename__ = "favorites"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), primary_key=True)
-    property_id: Mapped[int] = mapped_column(ForeignKey("properties.property_id"), primary_key=True)
+    property_id: Mapped[int] = mapped_column(
+        ForeignKey("properties.property_id"), primary_key=True
+    )
     room_id: Mapped[int] = mapped_column(ForeignKey("rooms.room_id"), nullable=True)
 
     user: Mapped[User] = relationship(back_populates="favorites")

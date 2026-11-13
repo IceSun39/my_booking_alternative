@@ -12,8 +12,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 user_service = UserService()
 
-async def get_current_user(token: str = Depends(oauth2_scheme),
-                           session: AsyncSession = Depends(get_session)) -> User:
+
+async def get_current_user(
+    token: str = Depends(oauth2_scheme), session: AsyncSession = Depends(get_session)
+) -> User:
     payload = decode_token(token)
 
     if payload.get("refresh") is True:
@@ -42,7 +44,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
     return user
 
 
-async def get_owner_or_admin_user(current_user: User = Depends(get_current_user)) -> User:
+async def get_owner_or_admin_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
     if current_user.role not in [Role.ADMIN, Role.OWNER]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -12,6 +12,7 @@ class AmenityType(enum.Enum):
     ROOM = "room"
     BOTH = "both"
 
+
 class Amenity(Base):
     __tablename__ = "amenities"
 
@@ -21,4 +22,6 @@ class Amenity(Base):
     type: Mapped[AmenityType] = mapped_column(Enum(AmenityType), nullable=False)
 
     rooms = relationship("Room", secondary=room_amenities, back_populates="amenities")
-    properties = relationship("Property", secondary=property_amenities, back_populates="amenities")
+    properties = relationship(
+        "Property", secondary=property_amenities, back_populates="amenities"
+    )

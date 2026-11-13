@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 class RoomType(enum.Enum):
     PRIVATE = "private"
-    SHARED = 'shared'
+    SHARED = "shared"
 
 
 class Room(Base):
@@ -38,4 +38,6 @@ class Room(Base):
     property: Mapped[Property] = relationship(back_populates="rooms")
     bookings: Mapped[list[Booking]] = relationship(back_populates="room")
     favorites: Mapped[list[Favorite]] = relationship(back_populates="room")
-    amenities: Mapped[list[Amenity]] = relationship(secondary=room_amenities, back_populates="rooms")
+    amenities: Mapped[list[Amenity]] = relationship(
+        secondary=room_amenities, back_populates="rooms"
+    )

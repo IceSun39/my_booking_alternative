@@ -1,4 +1,3 @@
-
 from sqlalchemy import and_, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,8 +8,8 @@ from src.backend.schemas.search_schemas import SearchFilter, SortBy
 class SearchServices:
     @staticmethod
     async def find_available_properties(
-            session: AsyncSession,
-            filters: SearchFilter,
+        session: AsyncSession,
+        filters: SearchFilter,
     ) -> list[Property]:
         # Take all properties with all rooms
         stmt = select(Property).join(Property.rooms)
@@ -29,7 +28,9 @@ class SearchServices:
 
         # Filter by amenities
         if filters.amenities is not None:
-            stmt = stmt.where(Room.amenities.any(Amenity.amenity_id.in_(filters.amenities)))
+            stmt = stmt.where(
+                Room.amenities.any(Amenity.amenity_id.in_(filters.amenities))
+            )
 
         overlapping_bookings = select(Booking.booking_id).where(
             and_(

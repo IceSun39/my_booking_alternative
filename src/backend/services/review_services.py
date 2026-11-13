@@ -1,4 +1,3 @@
-
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +11,9 @@ from src.backend.schemas.reviews_schemas import (
 
 
 class ReviewService:
-    async def _get_reviews_in_db(self, session: AsyncSession, review_id: int) -> Review | None:
+    async def _get_reviews_in_db(
+        self, session: AsyncSession, review_id: int
+    ) -> Review | None:
         stmt = select(Review).where(Review.review_id == review_id)
         result = await session.execute(stmt)
         review = result.scalar_one_or_none()
@@ -35,14 +36,18 @@ class ReviewService:
             raise HTTPException(status_code=404, detail="Property not found")
         return property_obj
 
-    async def get_property_reviews(self, session: AsyncSession, property_id: int) -> list[ReviewResponse]:
+    async def get_property_reviews(
+        self, session: AsyncSession, property_id: int
+    ) -> list[ReviewResponse]:
         stmt = select(Review).where(Review.property_id == property_id)
         result = await session.execute(stmt)
         reviews = result.scalars().all()
 
         return [ReviewResponse.model_validate(review) for review in reviews]
 
-    async def get_room_reviews(self, session: AsyncSession, room_id: int) -> list[ReviewResponse]:
+    async def get_room_reviews(
+        self, session: AsyncSession, room_id: int
+    ) -> list[ReviewResponse]:
         stmt = select(Review).join(Booking).where(Booking.room_id == room_id)
         result = await session.execute(stmt)
         reviews = result.scalars().all()
@@ -53,7 +58,13 @@ class ReviewService:
         existing_review = await self._get_reviews_in_db(session, review_id)
         return ReviewResponse.model_validate(existing_review)
 
-    async def create_review(self, session: AsyncSession, review_create: ReviewCreate, user_id: int, property_id: int) -> ReviewResponse:
+    async def create_review(
+        self,
+        session: AsyncSession,
+        review_create: ReviewCreate,
+        user_id: int,
+        property_id: int,
+    ) -> ReviewResponse:
         stmt = select(Review).where(Review.booking_id == review_create.booking_id)
         result = await session.execute(stmt)
         existing_review = result.scalar_one_or_none()
@@ -76,15 +87,21 @@ class ReviewService:
         await session.refresh(new_review)
         return ReviewResponse.model_validate(new_review)
 
-    async def update_review(self, session: AsyncSession, review_update: ReviewUpdate, review_id: int) -> ReviewResponse:
-        existing_review = await self._get_reviews_in_db(session=session, review_id=review_id)
+    async def update_review(
+        self, session: AsyncSession, review_update: ReviewUpdate, review_id: int
+    ) -> ReviewResponse:
+        existing_review = await self._get_reviews_in_db(
+            session=session, review_id=review_id
+        )
         update_data = review_update.model_dump(exclude_unset=True)
 
         if "rating" in update_data and update_data["rating"] != existing_review.rating:
             old_review_rating = existing_review.rating
             new_review_rating = update_data["rating"]
 
-            property_obj = await self._find_property(session, existing_review.booking_id)
+            property_obj = await self._find_property(
+                session, existing_review.booking_id
+            )
 
             old_total = property_obj.rating * property_obj.reviews_count
             new_total = old_total - old_review_rating + new_review_rating
@@ -98,7 +115,9 @@ class ReviewService:
         return ReviewResponse.model_validate(existing_review)
 
     async def delete_review(self, session: AsyncSession, review_id: int) -> None:
-        existing_review = await self._get_reviews_in_db(session=session, review_id=review_id)
+        existing_review = await self._get_reviews_in_db(
+            session=session, review_id=review_id
+        )
 
         property_obj = await self._find_property(session, existing_review.booking_id)
         old_rating = property_obj.rating * property_obj.reviews_count
@@ -112,4 +131,3 @@ class ReviewService:
 
         await session.delete(existing_review)
         await session.commit()
-

@@ -1,18 +1,14 @@
-
-
 async def test_register_user(async_client):
     user_data = {
         "email": "test@example.com",
         "username": "testuser",
         "phone_number": "1234567890",
         "password": "strongpassword123",
-        "role": 3
+        "role": 3,
     }
     response = await async_client.post("/auth/register", json=user_data)
 
-
     assert response.status_code == 201
-
 
     data = response.json()
     assert data["email"] == "test@example.com"
@@ -27,15 +23,12 @@ async def test_login_user(async_client):
         "username": "loginguy",
         "phone_number": "0987654321",
         "password": "mypassword",
-        "role": 2
+        "role": 2,
     }
     register_response = await async_client.post("/auth/register", json=user_data)
     assert register_response.status_code in [200, 201]
 
-    login_data = {
-        "username": "testlogin@example.com",
-        "password": "mypassword"
-    }
+    login_data = {"username": "testlogin@example.com", "password": "mypassword"}
     response = await async_client.post("/auth/login", data=login_data)
 
     data = response.json()

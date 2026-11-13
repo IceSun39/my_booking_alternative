@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
 class Settings:
     REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
     CELERY_BROKER_URL = REDIS_URL
@@ -14,4 +16,6 @@ class Settings:
     CELERY_TASK_TRACK_STARTED = True
     CELERY_TASK_TIME_LIMIT = 300
     CELERY_TASK_SOFT_TIME_LIMIT = 250
+
+
 settings = Settings()

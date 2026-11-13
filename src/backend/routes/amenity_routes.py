@@ -32,109 +32,117 @@ amenity_services = AmenityServices()
 room_service = RoomService()
 
 
-@property_amenity_router.get("/", response_model=list[AmenityResponse], status_code=status.HTTP_200_OK)
+@property_amenity_router.get(
+    "/", response_model=list[AmenityResponse], status_code=status.HTTP_200_OK
+)
 async def get_property_amenities(
-        property_id: int,
-        session: AsyncSession = Depends(get_session)
+    property_id: int, session: AsyncSession = Depends(get_session)
 ):
     """Get property amenities"""
     return await amenity_services.get_property_amenities(session, property_id)
 
 
-@room_amenity_router.get("/", response_model=list[AmenityResponse], status_code=status.HTTP_200_OK)
+@room_amenity_router.get(
+    "/", response_model=list[AmenityResponse], status_code=status.HTTP_200_OK
+)
 async def get_room_amenities(
-        room_id: int,
-        session: AsyncSession = Depends(get_session)
+    room_id: int, session: AsyncSession = Depends(get_session)
 ):
     """Get room amenities"""
     return await amenity_services.get_room_amenities(session, room_id)
 
 
-@amenity_router.get("/", response_model=list[AmenityResponse], status_code=status.HTTP_200_OK)
+@amenity_router.get(
+    "/", response_model=list[AmenityResponse], status_code=status.HTTP_200_OK
+)
 async def get_amenities(
-        amenity_type: AmenityType | None = Query(None),
-        session: AsyncSession = Depends(get_session),
+    amenity_type: AmenityType | None = Query(None),
+    session: AsyncSession = Depends(get_session),
 ):
     """Get amenities"""
     return await amenity_services.get_all_amenities(session, amenity_type)
 
 
-@amenity_router.post("/", response_model=AmenityResponse, status_code=status.HTTP_201_CREATED)
+@amenity_router.post(
+    "/", response_model=AmenityResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_amenity(
-        amenity_create: AmenityCreate,
-        session: AsyncSession = Depends(get_session),
-        admin: User = Depends(get_admin_user)
+    amenity_create: AmenityCreate,
+    session: AsyncSession = Depends(get_session),
+    admin: User = Depends(get_admin_user),
 ):
     """Create new amenity"""
     return await amenity_services.create_amenity(session, amenity_create)
 
 
-@amenity_router.put("/{amenity_id}", response_model=AmenityResponse, status_code=status.HTTP_202_ACCEPTED)
+@amenity_router.put(
+    "/{amenity_id}",
+    response_model=AmenityResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
 async def update_amenity(
-        amenity_update: AmenityUpdate,
-        amenity_id: int = Path(..., ge=1),
-        session: AsyncSession = Depends(get_session),
-        admin: User = Depends(get_admin_user)
+    amenity_update: AmenityUpdate,
+    amenity_id: int = Path(..., ge=1),
+    session: AsyncSession = Depends(get_session),
+    admin: User = Depends(get_admin_user),
 ):
     """Update amenity"""
     return await amenity_services.update_amenity(session, amenity_update, amenity_id)
 
 
-@property_amenity_router.put("/", response_model=list[AmenityResponse], status_code=status.HTTP_202_ACCEPTED)
+@property_amenity_router.put(
+    "/", response_model=list[AmenityResponse], status_code=status.HTTP_202_ACCEPTED
+)
 async def update_property_amenities(
-        amenity_data: AmenityAssign,
-        property_id: int = Path(..., ge=1),
-        session: AsyncSession = Depends(get_session),
-        current_user: User = Depends(get_owner_or_admin_user)
+    amenity_data: AmenityAssign,
+    property_id: int = Path(..., ge=1),
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_owner_or_admin_user),
 ):
     is_owner = await room_service.check_user_is_owner_by_property(
-        session=session,
-        property_id=property_id,
-        owner_id=current_user.user_id
+        session=session, property_id=property_id, owner_id=current_user.user_id
     )
 
     if not is_owner and current_user.role != Role.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have permission to perform this action"
+            detail="You do not have permission to perform this action",
         )
 
     return await amenity_services.update_property_amenities(
-        session=session,
-        property_id=property_id,
-        amenity_ids=amenity_data.amenity_ids
+        session=session, property_id=property_id, amenity_ids=amenity_data.amenity_ids
     )
 
 
-@room_amenity_router.put("/", response_model=list[AmenityResponse], status_code=status.HTTP_202_ACCEPTED)
+@room_amenity_router.put(
+    "/", response_model=list[AmenityResponse], status_code=status.HTTP_202_ACCEPTED
+)
 async def update_room_amenities(
-        amenity_data: AmenityAssign,
-        room_id: int = Path(..., ge=1),
-        session: AsyncSession = Depends(get_session),
-        current_user: User = Depends(get_owner_or_admin_user)
+    amenity_data: AmenityAssign,
+    room_id: int = Path(..., ge=1),
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_owner_or_admin_user),
 ):
     is_owner = await room_service.check_user_is_owner_by_room(
-        session=session,
-        room_id=room_id,
-        owner_id=current_user.user_id
+        session=session, room_id=room_id, owner_id=current_user.user_id
     )
 
     if not is_owner and current_user.role != Role.ADMIN:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="You do not have permission to perform this action")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to perform this action",
+        )
 
     return await amenity_services.update_room_amenities(
-        session=session,
-        room_id=room_id,
-        amenity_ids=amenity_data.amenity_ids
+        session=session, room_id=room_id, amenity_ids=amenity_data.amenity_ids
     )
 
 
 @amenity_router.delete("/{amenity_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_amenity(
-        amenity_id: int = Path(..., ge=1),
-        session: AsyncSession = Depends(get_session),
-        admin: User = Depends(get_admin_user)
+    amenity_id: int = Path(..., ge=1),
+    session: AsyncSession = Depends(get_session),
+    admin: User = Depends(get_admin_user),
 ):
     """Delete amenity"""
     await amenity_services.delete_amenity(session, amenity_id)

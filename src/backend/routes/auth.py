@@ -10,37 +10,41 @@ from src.backend.database.database import get_session
 from src.backend.schemas.users_schemas import UserRegister, UserResponse
 from src.backend.services.user_services import UserService
 
-auth_router = APIRouter(
-    prefix="/auth",
-    tags=["auth"]
-)
+auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 UserService = UserService()
 
 
-@auth_router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register_user(user_data: UserRegister, session: AsyncSession = Depends(get_session)):
+@auth_router.post(
+    "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+)
+async def register_user(
+    user_data: UserRegister, session: AsyncSession = Depends(get_session)
+):
     return await UserService.create_user(session, user_data)
 
 
-
 @auth_router.post("/login", status_code=status.HTTP_200_OK)
-async def login_user(form_data: OAuth2PasswordRequestForm = Depends(),
-                     session: AsyncSession = Depends(get_session)
-                     ):
+async def login_user(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(get_session),
+):
     user = await UserService.get_user_by_email(session, form_data.username)
     if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token = create_access_token(data={'sub': user.email})
-    refresh_token = create_access_token(data={'sub': user.email}, refresh=True,
-                                        expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
+    access_token = create_access_token(data={"sub": user.email})
+    refresh_token = create_access_token(
+        data={"sub": user.email},
+        refresh=True,
+        expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+    )
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={
@@ -48,39 +52,36 @@ async def login_user(form_data: OAuth2PasswordRequestForm = Depends(),
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
-            "user": {
-                "email": user.email,
-                "user_id": str(user.user_id)
-            }
-        }
+            "user": {"email": user.email, "user_id": str(user.user_id)},
+        },
     )
 
 
 @auth_router.post("/refresh", status_code=status.HTTP_200_OK)
-async def refresh_access_token(refresh_token: str = Header(..., alias="Authorization"),
-                               session: AsyncSession = Depends(get_session)):
-    token = refresh_token.replace('Bearer ', '').strip()
+async def refresh_access_token(
+    refresh_token: str = Header(..., alias="Authorization"),
+    session: AsyncSession = Depends(get_session),
+):
+    token = refresh_token.replace("Bearer ", "").strip()
     token_data = decode_token(token)
 
     if not token_data.get("refresh"):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect refresh token"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect refresh token"
         )
 
     email = token_data.get("sub")
     user = await UserService.get_user_by_email(session, email)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
         )
 
-    new_access_token = create_access_token(data={'sub': user.email})
+    new_access_token = create_access_token(data={"sub": user.email})
     new_refresh_token = create_access_token(
-        data={'sub': user.email},
+        data={"sub": user.email},
         refresh=True,
-        expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
     )
 
     return JSONResponse(

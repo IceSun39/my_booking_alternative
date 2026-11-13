@@ -11,8 +11,10 @@ class PropertiesBase(BaseModel):
     house_number: Annotated[str, Field(min_length=1)]
     description: Annotated[str, Field(min_length=1)]
 
+
 class PropertiesCreate(PropertiesBase):
     owner_id: int
+
 
 class PropertiesUpdate(BaseModel):
     name: Annotated[str | None, Field(min_length=1)] = None
@@ -21,6 +23,7 @@ class PropertiesUpdate(BaseModel):
     street: Annotated[str | None, Field(min_length=1)] = None
     house_number: Annotated[str | None, Field(min_length=1)] = None
     description: Annotated[str | None, Field(min_length=1)] = None
+
 
 class PropertiesResponse(PropertiesBase):
     model_config = ConfigDict(from_attributes=True)

@@ -15,9 +15,21 @@ from tests.conftest import TestingSessionLocal
 async def setup_review_data():
     async with TestingSessionLocal() as session:
         # 1. Юзери
-        owner = User(email="owner_rev@test.com", password="pwd", username="owner", role=Role.OWNER)
-        reviewer = User(email="reviewer@test.com", password="pwd", username="reviewer", role=Role.USER)
-        other_user = User(email="other_rev@test.com", password="pwd", username="other", role=Role.USER)
+        owner = User(
+            email="owner_rev@test.com",
+            password="pwd",
+            username="owner",
+            role=Role.OWNER,
+        )
+        reviewer = User(
+            email="reviewer@test.com",
+            password="pwd",
+            username="reviewer",
+            role=Role.USER,
+        )
+        other_user = User(
+            email="other_rev@test.com", password="pwd", username="other", role=Role.USER
+        )
         session.add_all([owner, reviewer, other_user])
         await session.flush()
 
@@ -36,13 +48,19 @@ async def setup_review_data():
             description="Nice place",
             owner_id=owner_id,
             rating=4.0,
-            reviews_count=1
+            reviews_count=1,
         )
         session.add(prop)
         await session.flush()
         prop_id = prop.property_id
 
-        room = Room(property_id=prop_id, name="Lux", capacity=2, price=100, room_type=RoomType.PRIVATE)
+        room = Room(
+            property_id=prop_id,
+            name="Lux",
+            capacity=2,
+            price=100,
+            room_type=RoomType.PRIVATE,
+        )
         session.add(room)
         await session.flush()
         room_id = room.room_id
@@ -55,7 +73,7 @@ async def setup_review_data():
             check_out=datetime.date.today() - datetime.timedelta(days=5),
             guests=1,
             total_price=500,
-            status=BookingStatus.COMPLETED
+            status=BookingStatus.COMPLETED,
         )
         future_booking = Booking(
             user_id=reviewer_id,
@@ -64,7 +82,7 @@ async def setup_review_data():
             check_out=datetime.date.today() + datetime.timedelta(days=5),
             guests=1,
             total_price=400,
-            status=BookingStatus.CONFIRMED
+            status=BookingStatus.CONFIRMED,
         )
         session.add_all([past_booking, future_booking])
         await session.flush()
@@ -78,7 +96,7 @@ async def setup_review_data():
             property_id=prop_id,
             booking_id=past_booking_id,
             rating=4,
-            comment="Good!"
+            comment="Good!",
         )
         session.add(review)
         await session.flush()
@@ -93,23 +111,33 @@ async def setup_review_data():
             "property_id": prop_id,
             "past_booking_id": past_booking_id,
             "future_booking_id": future_booking_id,
-            "review_id": review_id
+            "review_id": review_id,
         }
 
 
 @pytest.mark.asyncio
-async def test_create_review_future_booking_fails(async_client: AsyncClient, setup_review_data):
+async def test_create_review_future_booking_fails(
+    async_client: AsyncClient, setup_review_data
+):
     """Помилка 400: не можна залишити відгук до виїзду"""
     data = setup_review_data
 
     async def override_user():
-        return User(user_id=data["reviewer_id"], email="reviewer@test.com", role=Role.USER)
+        return User(
+            user_id=data["reviewer_id"], email="reviewer@test.com", role=Role.USER
+        )
 
     app.dependency_overrides[get_current_user] = override_user
 
     try:
-        payload = {"booking_id": data["future_booking_id"], "rating": 5, "comment": "Great"}
-        response = await async_client.post(f"/api/properties/{data['property_id']}/reviews/", json=payload)
+        payload = {
+            "booking_id": data["future_booking_id"],
+            "rating": 5,
+            "comment": "Great",
+        }
+        response = await async_client.post(
+            f"/api/properties/{data['property_id']}/reviews/", json=payload
+        )
 
         assert response.status_code == 400, f"Unexpected error: {response.json()}"
         assert "before check-out" in response.json()["detail"]
@@ -118,19 +146,25 @@ async def test_create_review_future_booking_fails(async_client: AsyncClient, set
 
 
 @pytest.mark.asyncio
-async def test_update_review_success_and_rating_math(async_client: AsyncClient, setup_review_data):
+async def test_update_review_success_and_rating_math(
+    async_client: AsyncClient, setup_review_data
+):
     """Тестуємо зміну відгуку і перерахунок рейтингу готелю"""
     data = setup_review_data
 
     async def override_user():
-        return User(user_id=data["reviewer_id"], email="reviewer@test.com", role=Role.USER)
+        return User(
+            user_id=data["reviewer_id"], email="reviewer@test.com", role=Role.USER
+        )
 
     app.dependency_overrides[get_current_user] = override_user
 
     try:
         # Змінюємо оцінку з 4 на 10
         payload = {"rating": 10, "comment": "Amazing!"}
-        response = await async_client.put(f"/api/reviews/{data['review_id']}", json=payload)
+        response = await async_client.put(
+            f"/api/reviews/{data['review_id']}", json=payload
+        )
 
         assert response.status_code == 200, f"Error updating review: {response.json()}"
         assert response.json()["rating"] == 10
@@ -150,13 +184,17 @@ async def test_update_review_forbidden(async_client: AsyncClient, setup_review_d
     data = setup_review_data
 
     async def override_other_user():
-        return User(user_id=data["other_id"], email="other_rev@test.com", role=Role.USER)
+        return User(
+            user_id=data["other_id"], email="other_rev@test.com", role=Role.USER
+        )
 
     app.dependency_overrides[get_current_user] = override_other_user
 
     try:
         payload = {"rating": 1}
-        response = await async_client.put(f"/api/reviews/{data['review_id']}", json=payload)
+        response = await async_client.put(
+            f"/api/reviews/{data['review_id']}", json=payload
+        )
         assert response.status_code == 403, f"Unexpected response: {response.json()}"
     finally:
         app.dependency_overrides.pop(get_current_user, None)
@@ -168,13 +206,17 @@ async def test_delete_review_success(async_client: AsyncClient, setup_review_dat
     data = setup_review_data
 
     async def override_user():
-        return User(user_id=data["reviewer_id"], email="reviewer@test.com", role=Role.USER)
+        return User(
+            user_id=data["reviewer_id"], email="reviewer@test.com", role=Role.USER
+        )
 
     app.dependency_overrides[get_current_user] = override_user
 
     try:
         response = await async_client.delete(f"/api/reviews/{data['review_id']}")
-        assert response.status_code in [200, 204], f"Error deleting review: {response.text}"
+        assert response.status_code in [200, 204], (
+            f"Error deleting review: {response.text}"
+        )
 
         # Перевіряємо скидання рейтингу в БД
         async with TestingSessionLocal() as session:

@@ -1,4 +1,3 @@
-
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,8 +12,14 @@ from src.backend.schemas.properties_schemas import (
 
 
 class PropertyService:
-    async def _get_property_in_db(self, session: AsyncSession, property_id: int) -> Property | None:
-        stmt = select(Property).where(Property.property_id == property_id).options(selectinload(Property.amenities))
+    async def _get_property_in_db(
+        self, session: AsyncSession, property_id: int
+    ) -> Property | None:
+        stmt = (
+            select(Property)
+            .where(Property.property_id == property_id)
+            .options(selectinload(Property.amenities))
+        )
         result = await session.execute(stmt)
         property = result.scalar_one_or_none()
 
@@ -28,16 +33,28 @@ class PropertyService:
         property = result.scalars().all()
         return property
 
-    async def get_property(self, session: AsyncSession, property_id: int) -> PropertiesResponse:
-        property = await self._get_property_in_db(session=session, property_id=property_id)
+    async def get_property(
+        self, session: AsyncSession, property_id: int
+    ) -> PropertiesResponse:
+        property = await self._get_property_in_db(
+            session=session, property_id=property_id
+        )
         return PropertiesResponse.model_validate(property)
 
-    async def create_property(self, session: AsyncSession, properties_create: PropertiesCreate) -> PropertiesResponse:
-        stmt = select(Property).where(Property.name == properties_create.name).options(selectinload(Property.amenities))
+    async def create_property(
+        self, session: AsyncSession, properties_create: PropertiesCreate
+    ) -> PropertiesResponse:
+        stmt = (
+            select(Property)
+            .where(Property.name == properties_create.name)
+            .options(selectinload(Property.amenities))
+        )
         result = await session.execute(stmt)
         property = result.scalar_one_or_none()
         if property:
-            raise HTTPException(status_code=409, detail="Property with this name already exists")
+            raise HTTPException(
+                status_code=409, detail="Property with this name already exists"
+            )
 
         stmt_owners = select(User.user_id).where(User.role == Role.OWNER)
         result = await session.execute(stmt_owners)
@@ -54,9 +71,15 @@ class PropertyService:
         await session.refresh(new_property)
         return PropertiesResponse.model_validate(new_property)
 
-    async def update_property(self, session: AsyncSession, properties_update: PropertiesUpdate,
-                              property_id: int) -> PropertiesResponse:
-        existing_property = await self._get_property_in_db(session=session, property_id=property_id)
+    async def update_property(
+        self,
+        session: AsyncSession,
+        properties_update: PropertiesUpdate,
+        property_id: int,
+    ) -> PropertiesResponse:
+        existing_property = await self._get_property_in_db(
+            session=session, property_id=property_id
+        )
 
         update_data = properties_update.model_dump(exclude_unset=True)
 
@@ -68,8 +91,9 @@ class PropertyService:
         return PropertiesResponse.model_validate(existing_property)
 
     async def delete_property(self, session: AsyncSession, property_id: int) -> None:
-        existing_property = await self._get_property_in_db(session=session, property_id=property_id)
+        existing_property = await self._get_property_in_db(
+            session=session, property_id=property_id
+        )
 
         await session.delete(existing_property)
         await session.commit()
-

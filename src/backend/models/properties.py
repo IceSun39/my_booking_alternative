@@ -25,12 +25,19 @@ class Property(Base):
     street: Mapped[str] = mapped_column(String)
     house_number: Mapped[str] = mapped_column(String)
     description: Mapped[str] = mapped_column(String, nullable=True)
-    rating: Mapped[float] = mapped_column(Float, CheckConstraint("rating >= 0 AND rating <= 10", name="check_rating_range_properties"), default=0.0)
+    rating: Mapped[float] = mapped_column(
+        Float,
+        CheckConstraint(
+            "rating >= 0 AND rating <= 10", name="check_rating_range_properties"
+        ),
+        default=0.0,
+    )
     reviews_count: Mapped[int] = mapped_column(Integer, default=0)
 
     owner: Mapped[User] = relationship(back_populates="properties")
     rooms: Mapped[list[Room]] = relationship(back_populates="property")
     favorites: Mapped[list[Favorite]] = relationship(back_populates="property")
     reviews: Mapped[list[Review]] = relationship(back_populates="property")
-    amenities: Mapped[list[Amenity]] = relationship("Amenity", secondary=property_amenities,
-                                                      back_populates="properties")
+    amenities: Mapped[list[Amenity]] = relationship(
+        "Amenity", secondary=property_amenities, back_populates="properties"
+    )

@@ -16,20 +16,30 @@ ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 password_hash = PasswordHash.recommended()
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return password_hash.verify(plain_password, hashed_password)
+
 
 def get_password_hash(password: str) -> str:
     return password_hash.hash(password)
 
-def create_access_token(data: dict, expires_delta: timedelta = None, refresh: bool = False) -> str:
+
+def create_access_token(
+    data: dict, expires_delta: timedelta | None = None, refresh: bool = False
+) -> str:
     to_encode = data.copy()
-    expire = datetime.now(UTC) + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(UTC) + (
+        expires_delta
+        if expires_delta
+        else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
     to_encode.update({"exp": expire})
-    to_encode.update({'jti': str(uuid.uuid4())})
-    to_encode.update({'refresh': refresh})
+    to_encode.update({"jti": str(uuid.uuid4())})
+    to_encode.update({"refresh": refresh})
     encoded_jwt = jwt.encode(payload=to_encode, key=SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
 
 def decode_token(token: str) -> dict:
     try:
@@ -47,5 +57,3 @@ def decode_token(token: str) -> dict:
             status_code=401,
             detail="Invalid token",
         )
-
-

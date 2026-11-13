@@ -22,7 +22,7 @@ async def test_create_amenity(async_client: AsyncClient):
     payload = {
         "name": "Wi-Fi",
         "description": "Безкоштовний швидкісний інтернет",
-        "type": "both"
+        "type": "both",
     }
     response = await async_client.post("/api/amenity/", json=payload)
 
@@ -37,7 +37,9 @@ async def test_create_amenity(async_client: AsyncClient):
 async def test_get_all_amenities(async_client: AsyncClient):
     """Тестуємо отримання списку зручностей"""
     # Спочатку створимо дві різні зручності
-    await async_client.post("/api/amenity/", json={"name": "Басейн", "type": "property"})
+    await async_client.post(
+        "/api/amenity/", json={"name": "Басейн", "type": "property"}
+    )
     await async_client.post("/api/amenity/", json={"name": "Сейф", "type": "room"})
 
     # Перевіряємо отримання всіх
@@ -60,10 +62,7 @@ async def test_get_all_amenities(async_client: AsyncClient):
 async def test_update_amenity(async_client: AsyncClient):
     """Тестуємо оновлення зручності"""
     # Створюємо
-    create_resp = await async_client.post(
-        "/api/amenity/",
-        json={"name": "Старе ім'я"}
-    )
+    create_resp = await async_client.post("/api/amenity/", json={"name": "Старе ім'я"})
     amenity_id = create_resp.json()["amenity_id"]
 
     # Оновлюємо
@@ -80,8 +79,7 @@ async def test_delete_amenity(async_client: AsyncClient):
     """Тестуємо видалення зручності"""
     # Створюємо
     create_resp = await async_client.post(
-        "/api/amenity/",
-        json={"name": "Для видалення"}
+        "/api/amenity/", json={"name": "Для видалення"}
     )
     amenity_id = create_resp.json()["amenity_id"]
 
@@ -91,8 +89,7 @@ async def test_delete_amenity(async_client: AsyncClient):
 
     # Перевіряємо, що її більше немає (очікуємо 404 при спробі оновити)
     update_resp = await async_client.put(
-        f"/api/amenity/{amenity_id}",
-        json={"name": "Тест"}
+        f"/api/amenity/{amenity_id}", json={"name": "Тест"}
     )
     assert update_resp.status_code == 404
 
@@ -102,8 +99,12 @@ async def test_update_property_amenities(async_client: AsyncClient):
     """Тестуємо додавання зручностей до готелю"""
 
     # 1. Створюємо кілька зручностей через API
-    resp1 = await async_client.post("/api/amenity/", json={"name": "Паркінг", "type": "property"})
-    resp2 = await async_client.post("/api/amenity/", json={"name": "Wi-Fi", "type": "both"})
+    resp1 = await async_client.post(
+        "/api/amenity/", json={"name": "Паркінг", "type": "property"}
+    )
+    resp2 = await async_client.post(
+        "/api/amenity/", json={"name": "Wi-Fi", "type": "both"}
+    )
 
     amenity_id_1 = resp1.json()["amenity_id"]
     amenity_id_2 = resp2.json()["amenity_id"]
@@ -111,7 +112,9 @@ async def test_update_property_amenities(async_client: AsyncClient):
     # 2. Створюємо юзера, а потім готель
     async with TestingSessionLocal() as session:
         # Спочатку створюємо власника
-        new_owner = User(email="owner1@test.com", username="owner1", password="pwd", role=Role.OWNER)
+        new_owner = User(
+            email="owner1@test.com", username="owner1", password="pwd", role=Role.OWNER
+        )
         session.add(new_owner)
         await session.flush()
         owner_id = new_owner.user_id
@@ -123,7 +126,7 @@ async def test_update_property_amenities(async_client: AsyncClient):
             city="Київ",
             street="Тестова",
             house_number="1",
-            owner_id=owner_id
+            owner_id=owner_id,
         )
         session.add(new_property)
         await session.flush()
@@ -139,7 +142,9 @@ async def test_update_property_amenities(async_client: AsyncClient):
     # 4. Відправляємо запит на оновлення списку зручностей
     try:
         payload = {"amenity_ids": [amenity_id_1, amenity_id_2]}
-        response = await async_client.put(f"/api/property/{property_id}/amenities/", json=payload)
+        response = await async_client.put(
+            f"/api/property/{property_id}/amenities/", json=payload
+        )
 
         # 5. Перевіряємо результати
         assert response.status_code == 202
@@ -155,12 +160,16 @@ async def test_update_room_amenities(async_client: AsyncClient):
     """Тестуємо додавання зручностей до кімнати"""
 
     # 1. Створюємо зручність типу "room"
-    resp = await async_client.post("/api/amenity/", json={"name": "Кондиціонер", "type": "room"})
+    resp = await async_client.post(
+        "/api/amenity/", json={"name": "Кондиціонер", "type": "room"}
+    )
     amenity_id = resp.json()["amenity_id"]
 
     # 2. Створюємо юзера, готель, а потім кімнату
     async with TestingSessionLocal() as session:
-        new_owner = User(email="owner2@test.com", username="owner2", password="pwd", role=Role.OWNER)
+        new_owner = User(
+            email="owner2@test.com", username="owner2", password="pwd", role=Role.OWNER
+        )
         session.add(new_owner)
         await session.flush()
         owner_id = new_owner.user_id
@@ -171,7 +180,7 @@ async def test_update_room_amenities(async_client: AsyncClient):
             city="Київ",
             street="Тестова",
             house_number="1",
-            owner_id=owner_id
+            owner_id=owner_id,
         )
         session.add(new_property)
         await session.flush()  # Flush, щоб отримати ID готелю
@@ -197,7 +206,9 @@ async def test_update_room_amenities(async_client: AsyncClient):
     # 4. Робимо запит
     try:
         payload = {"amenity_ids": [amenity_id]}
-        response = await async_client.put(f"/api/rooms/{room_id}/amenities/", json=payload)
+        response = await async_client.put(
+            f"/api/rooms/{room_id}/amenities/", json=payload
+        )
 
         # 5. Перевіряємо
         assert response.status_code == 202

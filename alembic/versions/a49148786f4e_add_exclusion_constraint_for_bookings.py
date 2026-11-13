@@ -5,13 +5,14 @@ Revises: e7db7c500609
 Create Date: 2026-08-24 13:32:14.342196
 
 """
+
 from collections.abc import Sequence
 
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = 'a49148786f4e'
-down_revision: str | Sequence[str] | None = 'e7db7c500609'
+revision: str = "a49148786f4e"
+down_revision: str | Sequence[str] | None = "e7db7c500609"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -33,4 +34,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # Видаляємо обмеження, якщо доведеться відкочувати міграцію
-    op.execute("ALTER TABLE bookings DROP CONSTRAINT IF EXISTS exclude_overlapping_bookings;")
+    op.execute(
+        "ALTER TABLE bookings DROP CONSTRAINT IF EXISTS exclude_overlapping_bookings;"
+    )

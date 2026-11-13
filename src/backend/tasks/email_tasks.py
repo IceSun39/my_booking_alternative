@@ -39,16 +39,23 @@ def send_email(self, subject, message, message_html, from_email, to_email, **kwa
 
     except smtplib.SMTPAuthenticationError as e:
         logger.error(f"Authentication error SMTP. Check EMAIL_PASSWORD: {e}")
-        raise e
+        raise
 
     except smtplib.SMTPRecipientsRefused as e:
         logger.error(f"Recipients address refused: ({to_email}): {e}")
-        raise e
+        raise
 
-    except (OSError, smtplib.SMTPConnectError, smtplib.SMTPServerDisconnected, TimeoutError) as e:
+    except (
+        OSError,
+        smtplib.SMTPConnectError,
+        smtplib.SMTPServerDisconnected,
+        TimeoutError,
+    ) as e:
         logger.warning(f"Connection error SMTP. Retry... Details: {e}")
         raise self.retry(exc=e)
 
     except Exception as e:
-        logger.error(f"Unexpected error while sending to {to_email}: {e}", exc_info=True)
-        raise e
+        logger.exception(
+            f"Unexpected error while sending to {to_email}: {e}"
+        )
+        raise

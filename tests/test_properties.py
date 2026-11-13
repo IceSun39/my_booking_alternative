@@ -12,11 +12,17 @@ async def setup_properties_data():
     """Створюємо базові дані: власника, адміна та один готель"""
     async with TestingSessionLocal() as session:
         # 1. Власник
-        owner = User(email="owner@prop.com", password="pwd", username="owner1", role=Role.OWNER)
+        owner = User(
+            email="owner@prop.com", password="pwd", username="owner1", role=Role.OWNER
+        )
         # 2. Адмін
-        admin = User(email="admin@prop.com", password="pwd", username="admin1", role=Role.ADMIN)
+        admin = User(
+            email="admin@prop.com", password="pwd", username="admin1", role=Role.ADMIN
+        )
         # 3. Звичайний юзер (не має прав)
-        user = User(email="user@prop.com", password="pwd", username="user1", role=Role.USER)
+        user = User(
+            email="user@prop.com", password="pwd", username="user1", role=Role.USER
+        )
 
         session.add_all([owner, admin, user])
         await session.flush()
@@ -31,7 +37,7 @@ async def setup_properties_data():
             description="Nice place",
             owner_id=owner.user_id,
             rating=0.0,
-            reviews_count=0
+            reviews_count=0,
         )
         session.add(prop)
         await session.flush()
@@ -43,7 +49,7 @@ async def setup_properties_data():
             "owner_id": owner.user_id,
             "admin_id": admin.user_id,
             "user_id": user.user_id,
-            "property_id": prop_id
+            "property_id": prop_id,
         }
         await session.commit()
         return data
@@ -58,7 +64,9 @@ async def test_get_all_properties(async_client: AsyncClient, setup_properties_da
 
 
 @pytest.mark.asyncio
-async def test_create_property_success(async_client: AsyncClient, setup_properties_data):
+async def test_create_property_success(
+    async_client: AsyncClient, setup_properties_data
+):
     """Тест створення готелю власником"""
     data = setup_properties_data
 
@@ -74,7 +82,7 @@ async def test_create_property_success(async_client: AsyncClient, setup_properti
         "street": "Ринок",
         "house_number": "10",
         "description": "Very nice",
-        "owner_id": data["owner_id"]
+        "owner_id": data["owner_id"],
     }
 
     response = await async_client.post("/api/properties/", json=payload)
@@ -85,7 +93,9 @@ async def test_create_property_success(async_client: AsyncClient, setup_properti
 
 
 @pytest.mark.asyncio
-async def test_create_property_conflict(async_client: AsyncClient, setup_properties_data):
+async def test_create_property_conflict(
+    async_client: AsyncClient, setup_properties_data
+):
     """Тест на унікальність імені (409 Conflict)"""
     data = setup_properties_data
 
@@ -102,7 +112,7 @@ async def test_create_property_conflict(async_client: AsyncClient, setup_propert
         "street": "Хрещатик",
         "house_number": "1",
         "description": "Nice place",
-        "owner_id": data["owner_id"]
+        "owner_id": data["owner_id"],
     }
 
     response = await async_client.post("/api/properties/", json=payload)
@@ -112,7 +122,9 @@ async def test_create_property_conflict(async_client: AsyncClient, setup_propert
 
 
 @pytest.mark.asyncio
-async def test_update_property_success(async_client: AsyncClient, setup_properties_data):
+async def test_update_property_success(
+    async_client: AsyncClient, setup_properties_data
+):
     """Тест оновлення даних власником"""
     data = setup_properties_data
 
@@ -123,7 +135,9 @@ async def test_update_property_success(async_client: AsyncClient, setup_properti
 
     payload = {"city": "Одеса"}
 
-    response = await async_client.put(f"/api/properties/{data['property_id']}", json=payload)
+    response = await async_client.put(
+        f"/api/properties/{data['property_id']}", json=payload
+    )
     assert response.status_code == 200
     assert response.json()["city"] == "Одеса"
 
@@ -131,7 +145,9 @@ async def test_update_property_success(async_client: AsyncClient, setup_properti
 
 
 @pytest.mark.asyncio
-async def test_delete_property_forbidden(async_client: AsyncClient, setup_properties_data):
+async def test_delete_property_forbidden(
+    async_client: AsyncClient, setup_properties_data
+):
     """Тест: звичайний користувач намагається видалити готель (має бути 403 або 401 через dependency)"""
     data = setup_properties_data
 
@@ -143,13 +159,18 @@ async def test_delete_property_forbidden(async_client: AsyncClient, setup_proper
     app.dependency_overrides[get_owner_or_admin_user] = override_user
 
     response = await async_client.delete(f"/api/properties/{data['property_id']}")
-    assert response.status_code in [403, 401]  # В залежності від твоєї реалізації get_owner_or_admin_user
+    assert response.status_code in [
+        403,
+        401,
+    ]  # В залежності від твоєї реалізації get_owner_or_admin_user
 
     app.dependency_overrides.pop(get_owner_or_admin_user, None)
 
 
 @pytest.mark.asyncio
-async def test_delete_property_by_admin(async_client: AsyncClient, setup_properties_data):
+async def test_delete_property_by_admin(
+    async_client: AsyncClient, setup_properties_data
+):
     """Тест: адмін успішно видаляє готель, хоча він не є його власником"""
     data = setup_properties_data
 

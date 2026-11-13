@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,12 +20,11 @@ property_service = PropertyService()
 
 
 async def check_owner_or_admin(
-        session: AsyncSession,
-        owner: User,
-        property_id: int,
-        current_user: User
+    session: AsyncSession, owner: User, property_id: int, current_user: User
 ) -> bool:
-    existing_property = await property_service.get_property(session=session, property_id=property_id)
+    existing_property = await property_service.get_property(
+        session=session, property_id=property_id
+    )
     if existing_property.owner_id == owner.user_id or current_user.is_admin:
         return True
     raise HTTPException(
@@ -36,7 +34,9 @@ async def check_owner_or_admin(
 
 
 @properties_router.get("/{property_id}", response_model=PropertiesResponse)
-async def get_property_by_id(property_id: int, session: AsyncSession = Depends(get_session)):
+async def get_property_by_id(
+    property_id: int, session: AsyncSession = Depends(get_session)
+):
     """Отримати готель по id"""
     return await property_service.get_property(session=session, property_id=property_id)
 
@@ -49,13 +49,15 @@ async def get_all_properties(session: AsyncSession = Depends(get_session)):
 
 @properties_router.post("/", response_model=PropertiesResponse)
 async def create_property(
-        property_create: PropertiesCreate,
-        session: AsyncSession = Depends(get_session),
-        current_user: User = Depends(get_owner_or_admin_user)
+    property_create: PropertiesCreate,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_owner_or_admin_user),
 ):
     """Створити власність, може тільки адмін або власник"""
     if current_user.role in [Role.ADMIN, Role.OWNER]:
-        return await property_service.create_property(session=session, properties_create=property_create)
+        return await property_service.create_property(
+            session=session, properties_create=property_create
+        )
     raise HTTPException(
         status_code=403,
         detail="Access Denied",
@@ -64,14 +66,21 @@ async def create_property(
 
 @properties_router.put("/{property_id}", response_model=PropertiesResponse)
 async def update_property(
-        property_id: int,
-        property_update: PropertiesUpdate,
-        session: AsyncSession = Depends(get_session),
-        current_user: User = Depends(get_owner_or_admin_user)
+    property_id: int,
+    property_update: PropertiesUpdate,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_owner_or_admin_user),
 ):
-    """"Оновити дані про власність"""
-    if await check_owner_or_admin(session=session, owner=current_user, property_id=property_id, current_user=current_user):
-        return await property_service.update_property(session=session, property_id=property_id, properties_update=property_update)
+    """ "Оновити дані про власність"""
+    if await check_owner_or_admin(
+        session=session,
+        owner=current_user,
+        property_id=property_id,
+        current_user=current_user,
+    ):
+        return await property_service.update_property(
+            session=session, property_id=property_id, properties_update=property_update
+        )
     raise HTTPException(
         status_code=403,
         detail="Access Denied",
@@ -80,12 +89,17 @@ async def update_property(
 
 @properties_router.delete("/{property_id}", status_code=204)
 async def delete_property(
-        property_id: int,
-        session: AsyncSession = Depends(get_session),
-        current_user: User = Depends(get_owner_or_admin_user)
+    property_id: int,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_owner_or_admin_user),
 ):
     """Видалити власність"""
-    if await check_owner_or_admin(session=session, owner=current_user, property_id=property_id,current_user=current_user):
+    if await check_owner_or_admin(
+        session=session,
+        owner=current_user,
+        property_id=property_id,
+        current_user=current_user,
+    ):
         await property_service.delete_property(session=session, property_id=property_id)
         return
     raise HTTPException(

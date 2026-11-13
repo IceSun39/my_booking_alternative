@@ -10,15 +10,31 @@ from tests.conftest import TestingSessionLocal
 def override_user(user_id: int, role: Role):
     async def _override():
         return User(user_id=user_id, email="x@test.com", role=role)
+
     return _override
 
 
 @pytest.fixture
 async def setup_room_data():
     async with TestingSessionLocal() as session:
-        owner = User(email="owner_room@test.com", password="pwd", username="owner", role=Role.OWNER)
-        other_owner = User(email="other_room@test.com", password="pwd", username="other_owner", role=Role.OWNER)
-        admin = User(email="admin_room@test.com", password="pwd", username="admin", role=Role.ADMIN)
+        owner = User(
+            email="owner_room@test.com",
+            password="pwd",
+            username="owner",
+            role=Role.OWNER,
+        )
+        other_owner = User(
+            email="other_room@test.com",
+            password="pwd",
+            username="other_owner",
+            role=Role.OWNER,
+        )
+        admin = User(
+            email="admin_room@test.com",
+            password="pwd",
+            username="admin",
+            role=Role.ADMIN,
+        )
         session.add_all([owner, other_owner, admin])
         await session.flush()
 
@@ -35,7 +51,7 @@ async def setup_room_data():
             description="Nice place",
             owner_id=owner_id,
             rating=0.0,
-            reviews_count=0
+            reviews_count=0,
         )
         session.add(prop)
         await session.flush()
@@ -46,7 +62,7 @@ async def setup_room_data():
             name="Standard",
             capacity=2,
             price=80,
-            room_type=RoomType.PRIVATE
+            room_type=RoomType.PRIVATE,
         )
         session.add(room)
         await session.flush()
@@ -66,7 +82,9 @@ async def setup_room_data():
 @pytest.mark.asyncio
 async def test_get_room_success(async_client: AsyncClient, setup_room_data):
     data = setup_room_data
-    app.dependency_overrides[get_current_user] = override_user(data["owner_id"], Role.USER)
+    app.dependency_overrides[get_current_user] = override_user(
+        data["owner_id"], Role.USER
+    )
     try:
         response = await async_client.get(f"/api/rooms/{data['room_id']}")
         assert response.status_code == 200, response.json()
@@ -79,7 +97,9 @@ async def test_get_room_success(async_client: AsyncClient, setup_room_data):
 @pytest.mark.asyncio
 async def test_get_room_not_found(async_client: AsyncClient, setup_room_data):
     data = setup_room_data
-    app.dependency_overrides[get_current_user] = override_user(data["owner_id"], Role.USER)
+    app.dependency_overrides[get_current_user] = override_user(
+        data["owner_id"], Role.USER
+    )
     try:
         response = await async_client.get("/api/rooms/999999")
         assert response.status_code == 404
@@ -90,7 +110,9 @@ async def test_get_room_not_found(async_client: AsyncClient, setup_room_data):
 @pytest.mark.asyncio
 async def test_create_room_success(async_client: AsyncClient, setup_room_data):
     data = setup_room_data
-    app.dependency_overrides[get_current_user] = override_user(data["owner_id"], Role.OWNER)
+    app.dependency_overrides[get_current_user] = override_user(
+        data["owner_id"], Role.OWNER
+    )
     try:
         payload = {
             "name": "Deluxe",
@@ -110,14 +132,16 @@ async def test_create_room_success(async_client: AsyncClient, setup_room_data):
 @pytest.mark.asyncio
 async def test_create_room_duplicate_fails(async_client: AsyncClient, setup_room_data):
     data = setup_room_data
-    app.dependency_overrides[get_current_user] = override_user(data["owner_id"], Role.OWNER)
+    app.dependency_overrides[get_current_user] = override_user(
+        data["owner_id"], Role.OWNER
+    )
     try:
         payload = {
             "name": "Standard",
             "price": 100,
             "capacity": 2,
             "property_id": data["property_id"],
-            "amenities": []
+            "amenities": [],
         }
         response = await async_client.post("/api/rooms/", json=payload)
         assert response.status_code == 400
@@ -126,16 +150,20 @@ async def test_create_room_duplicate_fails(async_client: AsyncClient, setup_room
 
 
 @pytest.mark.asyncio
-async def test_create_room_forbidden_for_non_owner(async_client: AsyncClient, setup_room_data):
+async def test_create_room_forbidden_for_non_owner(
+    async_client: AsyncClient, setup_room_data
+):
     data = setup_room_data
-    app.dependency_overrides[get_current_user] = override_user(data["other_owner_id"], Role.OWNER)
+    app.dependency_overrides[get_current_user] = override_user(
+        data["other_owner_id"], Role.OWNER
+    )
     try:
         payload = {
             "name": "Suite",
             "price": 200,
             "capacity": 4,
             "property_id": data["property_id"],
-            "amenities": []
+            "amenities": [],
         }
         response = await async_client.post("/api/rooms/", json=payload)
         assert response.status_code == 403
@@ -146,7 +174,9 @@ async def test_create_room_forbidden_for_non_owner(async_client: AsyncClient, se
 @pytest.mark.asyncio
 async def test_update_room_success(async_client: AsyncClient, setup_room_data):
     data = setup_room_data
-    app.dependency_overrides[get_current_user] = override_user(data["owner_id"], Role.OWNER)
+    app.dependency_overrides[get_current_user] = override_user(
+        data["owner_id"], Role.OWNER
+    )
     try:
         payload = {"room_id": data["room_id"], "price": 120}
         response = await async_client.put(f"/api/rooms/{data['room_id']}", json=payload)
@@ -157,9 +187,13 @@ async def test_update_room_success(async_client: AsyncClient, setup_room_data):
 
 
 @pytest.mark.asyncio
-async def test_update_room_forbidden_for_non_owner(async_client: AsyncClient, setup_room_data):
+async def test_update_room_forbidden_for_non_owner(
+    async_client: AsyncClient, setup_room_data
+):
     data = setup_room_data
-    app.dependency_overrides[get_current_user] = override_user(data["other_owner_id"], Role.OWNER)
+    app.dependency_overrides[get_current_user] = override_user(
+        data["other_owner_id"], Role.OWNER
+    )
     try:
         payload = {"room_id": data["room_id"], "price": 999}
         response = await async_client.put(f"/api/rooms/{data['room_id']}", json=payload)
@@ -169,9 +203,13 @@ async def test_update_room_forbidden_for_non_owner(async_client: AsyncClient, se
 
 
 @pytest.mark.asyncio
-async def test_update_room_forbidden_for_regular_user(async_client: AsyncClient, setup_room_data):
+async def test_update_room_forbidden_for_regular_user(
+    async_client: AsyncClient, setup_room_data
+):
     data = setup_room_data
-    app.dependency_overrides[get_current_user] = override_user(data["owner_id"], Role.USER)
+    app.dependency_overrides[get_current_user] = override_user(
+        data["owner_id"], Role.USER
+    )
     try:
         payload = {"room_id": data["room_id"], "price": 999}
         response = await async_client.put(f"/api/rooms/{data['room_id']}", json=payload)
@@ -183,7 +221,9 @@ async def test_update_room_forbidden_for_regular_user(async_client: AsyncClient,
 @pytest.mark.asyncio
 async def test_delete_room_success(async_client: AsyncClient, setup_room_data):
     data = setup_room_data
-    app.dependency_overrides[get_current_user] = override_user(data["owner_id"], Role.OWNER)
+    app.dependency_overrides[get_current_user] = override_user(
+        data["owner_id"], Role.OWNER
+    )
     try:
         response = await async_client.delete(f"/api/rooms/{data['room_id']}")
         assert response.status_code in [200, 204], response.text
@@ -192,9 +232,13 @@ async def test_delete_room_success(async_client: AsyncClient, setup_room_data):
 
 
 @pytest.mark.asyncio
-async def test_delete_room_forbidden_for_non_owner(async_client: AsyncClient, setup_room_data):
+async def test_delete_room_forbidden_for_non_owner(
+    async_client: AsyncClient, setup_room_data
+):
     data = setup_room_data
-    app.dependency_overrides[get_current_user] = override_user(data["other_owner_id"], Role.OWNER)
+    app.dependency_overrides[get_current_user] = override_user(
+        data["other_owner_id"], Role.OWNER
+    )
     try:
         response = await async_client.delete(f"/api/rooms/{data['room_id']}")
         assert response.status_code == 403
@@ -205,7 +249,9 @@ async def test_delete_room_forbidden_for_non_owner(async_client: AsyncClient, se
 @pytest.mark.asyncio
 async def test_admin_can_manage_any_room(async_client: AsyncClient, setup_room_data):
     data = setup_room_data
-    app.dependency_overrides[get_current_user] = override_user(data["admin_id"], Role.ADMIN)
+    app.dependency_overrides[get_current_user] = override_user(
+        data["admin_id"], Role.ADMIN
+    )
     try:
         payload = {"room_id": data["room_id"], "price": 300}
         response = await async_client.put(f"/api/rooms/{data['room_id']}", json=payload)

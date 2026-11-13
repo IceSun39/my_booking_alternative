@@ -6,7 +6,7 @@ celery = Celery(
     "backend",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-    include=["src.backend.tasks.email_tasks"]
+    include=["src.backend.tasks.email_tasks"],
 )
 celery.conf.update(
     task_serializer="json",

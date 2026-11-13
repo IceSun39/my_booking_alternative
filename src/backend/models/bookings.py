@@ -35,7 +35,9 @@ class Booking(Base):
     guests: Mapped[int] = mapped_column(Integer)
 
     total_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
-    status: Mapped[BookingStatus] = mapped_column(Enum(BookingStatus), default=BookingStatus.PENDING)
+    status: Mapped[BookingStatus] = mapped_column(
+        Enum(BookingStatus), default=BookingStatus.PENDING
+    )
     room_type: Mapped[RoomType] = mapped_column(
         Enum(RoomType),
         nullable=False,
@@ -46,10 +48,7 @@ class Booking(Base):
         ExcludeConstraint(
             ("room_id", "="),
             (text("daterange(check_in, check_out)"), "&&"),
-            where=text(
-                "room_type = 'PRIVATE' "
-                "AND status IN ('PENDING', 'CONFIRMED')"
-            ),
+            where=text("room_type = 'PRIVATE' AND status IN ('PENDING', 'CONFIRMED')"),
             name="exclude_overlapping_private_bookings",
         ),
     )

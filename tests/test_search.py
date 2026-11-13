@@ -14,7 +14,12 @@ from tests.conftest import TestingSessionLocal
 @pytest.fixture
 async def setup_search_data():
     async with TestingSessionLocal() as session:
-        owner = User(email="owner_search@test.com", password="pwd", username="owner", role=Role.OWNER)
+        owner = User(
+            email="owner_search@test.com",
+            password="pwd",
+            username="owner",
+            role=Role.OWNER,
+        )
         session.add(owner)
         await session.flush()
         owner_id = owner.user_id
@@ -27,18 +32,39 @@ async def setup_search_data():
 
         # Property A — Kyiv, дешева кімната на 2, WiFi, є перекриваюче бронювання
         prop_a = Property(
-            name="A", country="UA", city="Kyiv", street="A", house_number="1",
-            description="d", owner_id=owner_id, rating=4.0, reviews_count=1
+            name="A",
+            country="UA",
+            city="Kyiv",
+            street="A",
+            house_number="1",
+            description="d",
+            owner_id=owner_id,
+            rating=4.0,
+            reviews_count=1,
         )
         # Property B — Kyiv, дорожча кімната на 4, WiFi+Pool, без бронювань
         prop_b = Property(
-            name="B", country="UA", city="Kyiv", street="B", house_number="2",
-            description="d", owner_id=owner_id, rating=2.0, reviews_count=1
+            name="B",
+            country="UA",
+            city="Kyiv",
+            street="B",
+            house_number="2",
+            description="d",
+            owner_id=owner_id,
+            rating=2.0,
+            reviews_count=1,
         )
         # Property C — Lviv, кімната на 2, без amenities
         prop_c = Property(
-            name="C", country="UA", city="Lviv", street="C", house_number="3",
-            description="d", owner_id=owner_id, rating=3.0, reviews_count=1
+            name="C",
+            country="UA",
+            city="Lviv",
+            street="C",
+            house_number="3",
+            description="d",
+            owner_id=owner_id,
+            rating=3.0,
+            reviews_count=1,
         )
         session.add_all([prop_a, prop_b, prop_c])
         await session.flush()
@@ -46,9 +72,27 @@ async def setup_search_data():
         property_b_id = prop_b.property_id
         property_c_id = prop_c.property_id
 
-        room_a = Room(property_id=prop_a.property_id, name="A1", capacity=2, price=100, room_type=RoomType.PRIVATE)
-        room_b = Room(property_id=prop_b.property_id, name="B1", capacity=4, price=200, room_type=RoomType.PRIVATE)
-        room_c = Room(property_id=prop_c.property_id, name="C1", capacity=2, price=80, room_type=RoomType.PRIVATE)
+        room_a = Room(
+            property_id=prop_a.property_id,
+            name="A1",
+            capacity=2,
+            price=100,
+            room_type=RoomType.PRIVATE,
+        )
+        room_b = Room(
+            property_id=prop_b.property_id,
+            name="B1",
+            capacity=4,
+            price=200,
+            room_type=RoomType.PRIVATE,
+        )
+        room_c = Room(
+            property_id=prop_c.property_id,
+            name="C1",
+            capacity=2,
+            price=80,
+            room_type=RoomType.PRIVATE,
+        )
         session.add_all([room_a, room_b, room_c])
         await session.flush()
 
@@ -96,16 +140,16 @@ async def setup_search_data():
 
 
 def base_filters(**overrides) -> SearchFilter:
-    defaults = dict(
-        check_in=datetime.date(2026, 9, 10),
-        check_out=datetime.date(2026, 9, 15),
-        city="Kyiv",
-        guest=1,
-        min_price=None,
-        max_price=None,
-        amenities=None,
-        sort_by=None,
-    )
+    defaults = {
+        "check_in": datetime.date(2026, 9, 10),
+        "check_out": datetime.date(2026, 9, 15),
+        "city": "Kyiv",
+        "guest": 1,
+        "min_price": None,
+        "max_price": None,
+        "amenities": None,
+        "sort_by": None,
+        }
     defaults.update(overrides)
     return SearchFilter(**defaults)
 
@@ -114,7 +158,9 @@ def base_filters(**overrides) -> SearchFilter:
 async def test_search_filters_by_city(setup_search_data):
     data = setup_search_data
     async with TestingSessionLocal() as session:
-        results = await SearchServices.find_available_properties(session, base_filters(city="Lviv"))
+        results = await SearchServices.find_available_properties(
+            session, base_filters(city="Lviv")
+        )
         ids = {p.property_id for p in results}
         assert ids == {data["property_c_id"]}
 

@@ -20,9 +20,24 @@ async def setup_booking_data():
     """Створюємо базові дані для тестів: юзера, готель і кімнату"""
     async with TestingSessionLocal() as session:
         # 1. Тестові користувачі
-        user = User(email="guest@test.com", password="hashed_password", username="guest", role=Role.USER)
-        other_user = User(email="other@test.com", password="hashed_password", username="other", role=Role.USER)
-        admin = User(email="admin@test.com", password="hashed_password", username="admin", role=Role.ADMIN)
+        user = User(
+            email="guest@test.com",
+            password="hashed_password",
+            username="guest",
+            role=Role.USER,
+        )
+        other_user = User(
+            email="other@test.com",
+            password="hashed_password",
+            username="other",
+            role=Role.USER,
+        )
+        admin = User(
+            email="admin@test.com",
+            password="hashed_password",
+            username="admin",
+            role=Role.ADMIN,
+        )
 
         session.add_all([user, other_user, admin])
 
@@ -41,7 +56,7 @@ async def setup_booking_data():
             city="Київ",
             street="Тестова",
             house_number="1",
-            owner_id=user_id
+            owner_id=user_id,
         )
         session.add(property_obj)
         await session.flush()
@@ -80,7 +95,7 @@ async def setup_booking_data():
             "other_user_id": other_user_id,
             "admin_id": admin_id,
             "room_id": room_id,
-            "hostel_room_id": hostel_room_id
+            "hostel_room_id": hostel_room_id,
         }
 
 
@@ -89,8 +104,11 @@ def mock_send_email():
     with patch("src.backend.routes.booking_routes.send_email.delay") as mock:
         yield mock
 
+
 @pytest.mark.asyncio
-async def test_create_booking_success(async_client: AsyncClient, setup_booking_data, mock_send_email):
+async def test_create_booking_success(
+    async_client: AsyncClient, setup_booking_data, mock_send_email
+):
     """Тестуємо успішне створення бронювання"""
     data = setup_booking_data
 
@@ -105,7 +123,7 @@ async def test_create_booking_success(async_client: AsyncClient, setup_booking_d
         "check_in": str(today + timedelta(days=1)),
         "check_out": str(today + timedelta(days=5)),
         "guests": 2,
-        "room_id": data["room_id"]
+        "room_id": data["room_id"],
     }
 
     response = await async_client.post("/api/bookings/", json=payload)
@@ -121,7 +139,9 @@ async def test_create_booking_success(async_client: AsyncClient, setup_booking_d
 
 
 @pytest.mark.asyncio
-async def test_create_booking_room_conflict(async_client: AsyncClient, setup_booking_data, mock_send_email):
+async def test_create_booking_room_conflict(
+    async_client: AsyncClient, setup_booking_data, mock_send_email
+):
     """Тестуємо конфлікт дат (кімната вже зайнята)"""
     data = setup_booking_data
 
@@ -135,7 +155,7 @@ async def test_create_booking_room_conflict(async_client: AsyncClient, setup_boo
         "check_in": str(today + timedelta(days=1)),
         "check_out": str(today + timedelta(days=5)),
         "guests": 1,
-        "room_id": data["room_id"]
+        "room_id": data["room_id"],
     }
 
     # Перше бронювання має пройти успішно
@@ -151,7 +171,9 @@ async def test_create_booking_room_conflict(async_client: AsyncClient, setup_boo
 
 
 @pytest.mark.asyncio
-async def test_get_my_bookings(async_client: AsyncClient, setup_booking_data, mock_send_email):
+async def test_get_my_bookings(
+    async_client: AsyncClient, setup_booking_data, mock_send_email
+):
     """Тестуємо отримання списку бронювань поточного юзера"""
     data = setup_booking_data
 
@@ -162,12 +184,15 @@ async def test_get_my_bookings(async_client: AsyncClient, setup_booking_data, mo
 
     # Створюємо бронювання
     today = date.today()
-    await async_client.post("/api/bookings/", json={
-        "check_in": str(today + timedelta(days=10)),
-        "check_out": str(today + timedelta(days=12)),
-        "guests": 1,
-        "room_id": data["room_id"]
-    })
+    await async_client.post(
+        "/api/bookings/",
+        json={
+            "check_in": str(today + timedelta(days=10)),
+            "check_out": str(today + timedelta(days=12)),
+            "guests": 1,
+            "room_id": data["room_id"],
+        },
+    )
 
     response = await async_client.get("/api/bookings/my_bookings")
     assert response.status_code == 200
@@ -179,7 +204,9 @@ async def test_get_my_bookings(async_client: AsyncClient, setup_booking_data, mo
 
 
 @pytest.mark.asyncio
-async def test_booking_permissions_security(async_client: AsyncClient, setup_booking_data, mock_send_email):
+async def test_booking_permissions_security(
+    async_client: AsyncClient, setup_booking_data, mock_send_email
+):
     """Тестуємо безпеку: чужий юзер не може переглядати/змінювати чуже бронювання, а адмін може"""
     data = setup_booking_data
 
@@ -190,17 +217,22 @@ async def test_booking_permissions_security(async_client: AsyncClient, setup_boo
     app.dependency_overrides[get_current_user] = override_user_1
 
     today = date.today()
-    create_resp = await async_client.post("/api/bookings/", json={
-        "check_in": str(today + timedelta(days=20)),
-        "check_out": str(today + timedelta(days=22)),
-        "guests": 1,
-        "room_id": data["room_id"]
-    })
+    create_resp = await async_client.post(
+        "/api/bookings/",
+        json={
+            "check_in": str(today + timedelta(days=20)),
+            "check_out": str(today + timedelta(days=22)),
+            "guests": 1,
+            "room_id": data["room_id"],
+        },
+    )
     booking_id = create_resp.json()["booking_id"]
 
     # 2. Намагаємося отримати це бронювання від імені "іншого" юзера (має бути 403)
     async def override_user_2():
-        return User(user_id=data["other_user_id"], email="other@test.com", role=Role.USER)
+        return User(
+            user_id=data["other_user_id"], email="other@test.com", role=Role.USER
+        )
 
     app.dependency_overrides[get_current_user] = override_user_2
 
@@ -221,9 +253,7 @@ async def test_booking_permissions_security(async_client: AsyncClient, setup_boo
 
 @pytest.mark.asyncio
 async def test_shared_room_allows_multiple_bookings(
-        async_client: AsyncClient,
-        setup_booking_data,
-        mock_send_email
+    async_client: AsyncClient, setup_booking_data, mock_send_email
 ):
     """Shared room allows multiple overlapping bookings if capacity is not exceeded."""
 
@@ -274,9 +304,7 @@ async def test_shared_room_allows_multiple_bookings(
 
 @pytest.mark.asyncio
 async def test_shared_room_capacity_conflict(
-        async_client: AsyncClient,
-        setup_booking_data,
-        mock_send_email
+    async_client: AsyncClient, setup_booking_data, mock_send_email
 ):
     """Shared room must reject booking when total guests exceed capacity."""
 
@@ -330,10 +358,7 @@ async def test_shared_room_capacity_conflict(
 
 
 @pytest.mark.asyncio
-async def test_shared_room_race_condition(
-        setup_booking_data,
-        mock_send_email
-):
+async def test_shared_room_race_condition(setup_booking_data, mock_send_email):
     """
     Two concurrent bookings must not exceed shared room capacity.
 
@@ -387,9 +412,7 @@ async def test_shared_room_race_condition(
     ]
 
     failed = [
-        result
-        for result in (result_a, result_b)
-        if isinstance(result, HTTPException)
+        result for result in (result_a, result_b) if isinstance(result, HTTPException)
     ]
 
     assert len(successful) == 1
@@ -399,9 +422,7 @@ async def test_shared_room_race_condition(
 
 @pytest.mark.asyncio
 async def test_update_shared_booking_respects_capacity(
-        async_client: AsyncClient,
-        setup_booking_data,
-        mock_send_email
+    async_client: AsyncClient, setup_booking_data, mock_send_email
 ):
     """Updating a shared booking must respect room capacity."""
 
@@ -462,8 +483,7 @@ async def test_update_shared_booking_respects_capacity(
 
 @pytest.mark.asyncio
 async def test_cancelled_booking_does_not_block_room(
-        setup_booking_data,
-        mock_send_email
+    setup_booking_data, mock_send_email
 ):
     """Cancelled shared booking must not count toward room capacity."""
 

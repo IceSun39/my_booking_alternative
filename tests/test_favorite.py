@@ -17,7 +17,7 @@ async def setup_favorites_data():
             email="favorite_tester@test.com",
             password="hashed",
             username="fav_tester",
-            role=Role.USER
+            role=Role.USER,
         )
         session.add(user)
         await session.flush()
@@ -30,7 +30,7 @@ async def setup_favorites_data():
             city="Київ",
             street="Хрещатик",
             house_number="1",
-            owner_id=user_id
+            owner_id=user_id,
         )
         prop2 = Property(
             name="Hotel Two",
@@ -38,7 +38,7 @@ async def setup_favorites_data():
             city="Львів",
             street="Площа Ринок",
             house_number="2",
-            owner_id=user_id
+            owner_id=user_id,
         )
         session.add_all([prop1, prop2])
         await session.flush()
@@ -57,17 +57,21 @@ async def setup_favorites_data():
         return {
             "user_id": user_id,
             "prop1_id": prop1_id,  # Вже є в обраному
-            "prop2_id": prop2_id  # Ще немає в обраному
+            "prop2_id": prop2_id,  # Ще немає в обраному
         }
 
 
 @pytest.mark.asyncio
-async def test_add_to_favorites_success(async_client: AsyncClient, setup_favorites_data):
+async def test_add_to_favorites_success(
+    async_client: AsyncClient, setup_favorites_data
+):
     """Тестуємо успішне додавання готелю до обраного"""
     data = setup_favorites_data
 
     async def override_get_current_user():
-        return User(user_id=data["user_id"], email="favorite_tester@test.com", role=Role.USER)
+        return User(
+            user_id=data["user_id"], email="favorite_tester@test.com", role=Role.USER
+        )
 
     app.dependency_overrides[get_current_user] = override_get_current_user
 
@@ -85,12 +89,16 @@ async def test_add_to_favorites_success(async_client: AsyncClient, setup_favorit
 
 
 @pytest.mark.asyncio
-async def test_add_to_favorites_conflict(async_client: AsyncClient, setup_favorites_data):
+async def test_add_to_favorites_conflict(
+    async_client: AsyncClient, setup_favorites_data
+):
     """Тестуємо помилку 400, якщо готель вже є в обраному"""
     data = setup_favorites_data
 
     async def override_get_current_user():
-        return User(user_id=data["user_id"], email="favorite_tester@test.com", role=Role.USER)
+        return User(
+            user_id=data["user_id"], email="favorite_tester@test.com", role=Role.USER
+        )
 
     app.dependency_overrides[get_current_user] = override_get_current_user
 
@@ -111,7 +119,9 @@ async def test_get_my_favorites(async_client: AsyncClient, setup_favorites_data)
     data = setup_favorites_data
 
     async def override_get_current_user():
-        return User(user_id=data["user_id"], email="favorite_tester@test.com", role=Role.USER)
+        return User(
+            user_id=data["user_id"], email="favorite_tester@test.com", role=Role.USER
+        )
 
     app.dependency_overrides[get_current_user] = override_get_current_user
 
@@ -134,7 +144,9 @@ async def test_delete_favorite_success(async_client: AsyncClient, setup_favorite
     data = setup_favorites_data
 
     async def override_get_current_user():
-        return User(user_id=data["user_id"], email="favorite_tester@test.com", role=Role.USER)
+        return User(
+            user_id=data["user_id"], email="favorite_tester@test.com", role=Role.USER
+        )
 
     app.dependency_overrides[get_current_user] = override_get_current_user
 
@@ -153,12 +165,16 @@ async def test_delete_favorite_success(async_client: AsyncClient, setup_favorite
 
 
 @pytest.mark.asyncio
-async def test_delete_favorite_not_found(async_client: AsyncClient, setup_favorites_data):
+async def test_delete_favorite_not_found(
+    async_client: AsyncClient, setup_favorites_data
+):
     """Тестуємо помилку 404, якщо намагаємося видалити те, чого немає"""
     data = setup_favorites_data
 
     async def override_get_current_user():
-        return User(user_id=data["user_id"], email="favorite_tester@test.com", role=Role.USER)
+        return User(
+            user_id=data["user_id"], email="favorite_tester@test.com", role=Role.USER
+        )
 
     app.dependency_overrides[get_current_user] = override_get_current_user
 

@@ -1,4 +1,3 @@
-
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,26 +21,28 @@ class UserService:
         user = await self._get_user_in_db(session=session, user_id=user_id)
         return UserResponse.model_validate(user)
 
-    async def create_user(self, session: AsyncSession, user_create: UserRegister) -> UserResponse:
-        existing_user = await self.get_user_by_email(session=session, email=user_create.email)
+    async def create_user(
+        self, session: AsyncSession, user_create: UserRegister
+    ) -> UserResponse:
+        existing_user = await self.get_user_by_email(
+            session=session, email=user_create.email
+        )
         if existing_user:
             raise HTTPException(status_code=400, detail="User already exists")
 
         hashed_password = get_password_hash(user_create.password)
 
         user_data = user_create.model_dump(exclude={"password", "role"})
-        new_user = User(
-            **user_data,
-            password=hashed_password,
-            role=Role.USER
-        )
+        new_user = User(**user_data, password=hashed_password, role=Role.USER)
 
         session.add(new_user)
         await session.commit()
         await session.refresh(new_user)
         return UserResponse.model_validate(new_user)
 
-    async def update_user(self, session: AsyncSession, user_update: UserUpdate, user_id: int) -> UserResponse:
+    async def update_user(
+        self, session: AsyncSession, user_update: UserUpdate, user_id: int
+    ) -> UserResponse:
         user = await self._get_user_in_db(session=session, user_id=user_id)
 
         update_data = user_update.model_dump(exclude_unset=True)
@@ -62,7 +63,6 @@ class UserService:
 
         await session.delete(existing_user)
         await session.commit()
-
 
     async def get_user_by_email(self, session: AsyncSession, email: str) -> User | None:
         stmt = select(User).where(User.email == email)

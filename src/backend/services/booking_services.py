@@ -27,9 +27,7 @@ ACTIVE_BOOKING_STATUSES = {
 
 class BookingService:
     async def _get_booking_in_db(
-            self,
-            session: AsyncSession,
-            booking_id: int
+        self, session: AsyncSession, booking_id: int
     ) -> Booking | None:
         """Helper method for getting booking by id"""
         stmt = select(Booking).where(Booking.booking_id == booking_id)
@@ -41,16 +39,12 @@ class BookingService:
         return booking
 
     async def _get_room_for_booking(
-            self,
-            session: AsyncSession,
-            room_id: int,
+        self,
+        session: AsyncSession,
+        room_id: int,
     ) -> Room:
         """Returns room for given booking with for update"""
-        stmt = (
-            select(Room)
-            .where(Room.room_id == room_id)
-            .with_for_update()
-        )
+        stmt = select(Room).where(Room.room_id == room_id).with_for_update()
 
         result = await session.execute(stmt)
         room = result.scalar_one_or_none()
@@ -64,12 +58,12 @@ class BookingService:
         return room
 
     async def _find_all_bookings_for_room(
-            self,
-            session: AsyncSession,
-            room_id: int,
-            check_in: date,
-            check_out: date,
-            exclude_booking_id: int | None = None
+        self,
+        session: AsyncSession,
+        room_id: int,
+        check_in: date,
+        check_out: date,
+        exclude_booking_id: int | None = None,
     ) -> list[Booking]:
         """Method finds all bookings there cross dates"""
         # Basic statement
@@ -89,15 +83,20 @@ class BookingService:
         return result.scalars().all()
 
     async def _check_booking_dates_for_hostel_rooms(
-            self,
-            session: AsyncSession,
-            booking: BookingBase,
-            room: Room,
-            exclude_booking_id: int | None = None
+        self,
+        session: AsyncSession,
+        booking: BookingBase,
+        room: Room,
+        exclude_booking_id: int | None = None,
     ) -> bool:
         """Method checks whether there are any available places in the room"""
-        bookings = await self._find_all_bookings_for_room(session, room.room_id, booking.check_in, booking.check_out,
-                                                          exclude_booking_id)
+        bookings = await self._find_all_bookings_for_room(
+            session,
+            room.room_id,
+            booking.check_in,
+            booking.check_out,
+            exclude_booking_id,
+        )
 
         # Nothing is gets in the way, if there are no bookings
         if not bookings:
@@ -125,15 +124,20 @@ class BookingService:
         return True
 
     async def _check_booking_dates_for_hotel_rooms(
-            self,
-            session: AsyncSession,
-            booking: BookingBase,
-            room: Room,
-            exclude_booking_id: int | None = None
+        self,
+        session: AsyncSession,
+        booking: BookingBase,
+        room: Room,
+        exclude_booking_id: int | None = None,
     ) -> bool:
         """Methods checks whether the room is available on the specified dates"""
-        bookings = await self._find_all_bookings_for_room(session, room.room_id, booking.check_in, booking.check_out,
-                                                          exclude_booking_id)
+        bookings = await self._find_all_bookings_for_room(
+            session,
+            room.room_id,
+            booking.check_in,
+            booking.check_out,
+            exclude_booking_id,
+        )
 
         if not bookings:
             return True
@@ -141,32 +145,32 @@ class BookingService:
         return False
 
     async def _check_booking_available(
-            self,
-            session: AsyncSession,
-            booking: BookingBase,
-            room: Room,
-            exclude_booking_id: int | None = None
+        self,
+        session: AsyncSession,
+        booking: BookingBase,
+        room: Room,
+        exclude_booking_id: int | None = None,
     ) -> bool:
         """Checks to see if the recording room is available"""
 
         if room.room_type == RoomType.SHARED:
-            return await self._check_booking_dates_for_hostel_rooms(session, booking, room, exclude_booking_id)
+            return await self._check_booking_dates_for_hostel_rooms(
+                session, booking, room, exclude_booking_id
+            )
 
-        return await self._check_booking_dates_for_hotel_rooms(session, booking, room, exclude_booking_id)
+        return await self._check_booking_dates_for_hotel_rooms(
+            session, booking, room, exclude_booking_id
+        )
 
     async def get_booking(
-            self,
-            session: AsyncSession,
-            booking_id: int
+        self, session: AsyncSession, booking_id: int
     ) -> BookingResponse | None:
         """Return booking response model by id"""
         booking = await self._get_booking_in_db(session, booking_id)
         return BookingResponse.model_validate(booking)
 
     async def get_all_user_bookings(
-            self,
-            session: AsyncSession,
-            user_id: int
+        self, session: AsyncSession, user_id: int
     ) -> list[BookingResponse]:
         """Return all user's bookings"""
         stmt = select(Booking).where(Booking.user_id == user_id)
@@ -176,10 +180,7 @@ class BookingService:
         return [BookingResponse.model_validate(booking) for booking in bookings]
 
     async def create_booking(
-            self,
-            session: AsyncSession,
-            booking_create: BookingCreate,
-            user_id: int
+        self, session: AsyncSession, booking_create: BookingCreate, user_id: int
     ) -> BookingResponse:
         """Create new booking"""
 
@@ -208,8 +209,7 @@ class BookingService:
             )
 
         total_price = (
-                room.price
-                * (booking_create.check_out - booking_create.check_in).days
+            room.price * (booking_create.check_out - booking_create.check_in).days
         )
 
         new_booking = Booking(
@@ -242,10 +242,7 @@ class BookingService:
             raise
 
     async def update_booking(
-            self,
-            session: AsyncSession,
-            booking_update: BookingUpdate,
-            booking_id: int
+        self, session: AsyncSession, booking_update: BookingUpdate, booking_id: int
     ) -> BookingResponse | None:
         """Updates booking by id"""
 
@@ -292,9 +289,9 @@ class BookingService:
 
         # Recalculate price if dates or room changed
         if (
-                check_in != existing_booking.check_in
-                or check_out != existing_booking.check_out
-                or room_id != existing_booking.room_id
+            check_in != existing_booking.check_in
+            or check_out != existing_booking.check_out
+            or room_id != existing_booking.room_id
         ):
             total_price = room.price * (check_out - check_in).days
             existing_booking.total_price = total_price
@@ -311,14 +308,9 @@ class BookingService:
 
         return BookingResponse.model_validate(existing_booking)
 
-    async def delete_booking(
-            self,
-            session: AsyncSession,
-            booking_id: int
-    ) -> None:
+    async def delete_booking(self, session: AsyncSession, booking_id: int) -> None:
         """Deletes booking by id"""
         booking = await self._get_booking_in_db(session, booking_id)
 
         await session.delete(booking)
         await session.commit()
-

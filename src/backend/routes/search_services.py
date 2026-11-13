@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,10 +12,10 @@ search_router = APIRouter(
 )
 search_services = SearchServices()
 
+
 @search_router.get("/", response_model=list[PropertiesResponse])
 async def search_properties(
-        filters: SearchFilter = Depends(),
-        session: AsyncSession = Depends(get_session),
+    filters: SearchFilter = Depends(),
+    session: AsyncSession = Depends(get_session),
 ):
     return await search_services.find_available_properties(session, filters)
-

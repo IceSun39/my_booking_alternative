@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,9 +24,7 @@ booking_service = BookingService()
 
 
 async def check_user_owner_booking(
-        session: AsyncSession,
-        booking_id: int,
-        current_user: User
+    session: AsyncSession, booking_id: int, current_user: User
 ) -> bool:
     stmt = select(Booking.user_id).where(Booking.booking_id == booking_id)
     result = await session.execute(stmt)
@@ -35,24 +32,28 @@ async def check_user_owner_booking(
 
     if booking_owner_id is None:
         raise HTTPException(status_code=404, detail="Booking not found")
-    if current_user.user_id == booking_owner_id:
-        return True
-    return False
+
+    return current_user.user_id == booking_owner_id
 
 
-@booking_router.get("/my_bookings", response_model=list[BookingResponse], status_code=status.HTTP_200_OK)
+
+@booking_router.get(
+    "/my_bookings", response_model=list[BookingResponse], status_code=status.HTTP_200_OK
+)
 async def my_bookings(
-        current_user: User = Depends(get_current_user),
-        session: AsyncSession = Depends(get_session)
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
 ):
     return await booking_service.get_all_user_bookings(session, current_user.user_id)
 
 
-@booking_router.get("/{booking_id}", response_model=BookingResponse, status_code=status.HTTP_200_OK)
+@booking_router.get(
+    "/{booking_id}", response_model=BookingResponse, status_code=status.HTTP_200_OK
+)
 async def get_booking(
-        booking_id: int = Path(..., ge=1),
-        current_user: User = Depends(get_current_user),
-        session: AsyncSession = Depends(get_session)
+    booking_id: int = Path(..., ge=1),
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
 ):
     is_owner = await check_user_owner_booking(session, booking_id, current_user)
 
@@ -60,17 +61,21 @@ async def get_booking(
         return await booking_service.get_booking(session, booking_id)
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail="You do not have permission to perform this action"
+        detail="You do not have permission to perform this action",
     )
 
 
-@booking_router.post("/", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
+@booking_router.post(
+    "/", response_model=BookingResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_booking(
-        booking_create: BookingCreate,
-        session: AsyncSession = Depends(get_session),
-        current_user: User = Depends(get_current_user)
+    booking_create: BookingCreate,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ):
-    booking = await booking_service.create_booking(session, booking_create, current_user.user_id)
+    booking = await booking_service.create_booking(
+        session, booking_create, current_user.user_id
+    )
 
     subject = "🏨 Ваше бронювання успішно підтверджено!"
     message = f"Вітаємо! Ви успішно забронювали номер з {booking.check_in} по {booking.check_out}. Сума: {booking.total_price}."
@@ -95,18 +100,22 @@ async def create_booking(
         message=message,
         message_html=message_html,
         from_email=sender_email,
-        to_email=current_user.email
+        to_email=current_user.email,
     )
 
     return booking
 
 
-@booking_router.put("/{booking_id}", response_model=BookingResponse, status_code=status.HTTP_202_ACCEPTED)
+@booking_router.put(
+    "/{booking_id}",
+    response_model=BookingResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
 async def update_booking(
-        booking_id: int = Path(..., ge=1),
-        booking_update: BookingUpdate = Body(...),
-        session: AsyncSession = Depends(get_session),
-        current_user: User = Depends(get_current_user)
+    booking_id: int = Path(..., ge=1),
+    booking_update: BookingUpdate = Body(...),
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ):
     is_owner = await check_user_owner_booking(session, booking_id, current_user)
 
@@ -115,15 +124,15 @@ async def update_booking(
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail="You do not have permission to perform this action"
+        detail="You do not have permission to perform this action",
     )
 
 
 @booking_router.delete("/{booking_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_booking(
-        booking_id: int = Path(..., ge=1),
-        session: AsyncSession = Depends(get_session),
-        current_user: User = Depends(get_current_user)
+    booking_id: int = Path(..., ge=1),
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ):
     is_owner = await check_user_owner_booking(session, booking_id, current_user)
 
@@ -132,5 +141,5 @@ async def delete_booking(
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail="You do not have permission to perform this action"
+        detail="You do not have permission to perform this action",
     )
