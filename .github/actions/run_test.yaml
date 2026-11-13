@@ -1,0 +1,9 @@
+name: Run Tests
+description: Run project tests using pytest
+
+runs:
+  using: composite
+  steps:
+    - name: Run pytest
+      shell: bash
+      run: uv run pytest -v
