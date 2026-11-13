@@ -45,8 +45,11 @@ jobs:
       ALGORITHM: "HS256"
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup project
-        uses: ./.github/actions/setup-project.yaml
+        uses: ./.github/actions/setup_project
 
       - name: Run tests
-        uses: ./.github/actions/run-tests.yaml
+        uses: ./.github/actions/run_tests
