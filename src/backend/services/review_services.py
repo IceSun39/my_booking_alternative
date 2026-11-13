@@ -1,15 +1,18 @@
-from typing import Optional, List
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
 
-from src.backend.models import Review, Booking, Property, Room
-from src.backend.schemas.reviews_schemas import ReviewCreate, ReviewUpdate, ReviewResponse
+from src.backend.models import Booking, Property, Review, Room
+from src.backend.schemas.reviews_schemas import (
+    ReviewCreate,
+    ReviewResponse,
+    ReviewUpdate,
+)
 
 
 class ReviewService:
-    async def _get_reviews_in_db(self, session: AsyncSession, review_id: int) -> Optional[Review]:
+    async def _get_reviews_in_db(self, session: AsyncSession, review_id: int) -> Review | None:
         stmt = select(Review).where(Review.review_id == review_id)
         result = await session.execute(stmt)
         review = result.scalar_one_or_none()
@@ -32,14 +35,14 @@ class ReviewService:
             raise HTTPException(status_code=404, detail="Property not found")
         return property_obj
 
-    async def get_property_reviews(self, session: AsyncSession, property_id: int) -> List[ReviewResponse]:
+    async def get_property_reviews(self, session: AsyncSession, property_id: int) -> list[ReviewResponse]:
         stmt = select(Review).where(Review.property_id == property_id)
         result = await session.execute(stmt)
         reviews = result.scalars().all()
 
         return [ReviewResponse.model_validate(review) for review in reviews]
 
-    async def get_room_reviews(self, session: AsyncSession, room_id: int) -> List[ReviewResponse]:
+    async def get_room_reviews(self, session: AsyncSession, room_id: int) -> list[ReviewResponse]:
         stmt = select(Review).join(Booking).where(Booking.room_id == room_id)
         result = await session.execute(stmt)
         reviews = result.scalars().all()
@@ -110,4 +113,3 @@ class ReviewService:
         await session.delete(existing_review)
         await session.commit()
 
-        return None

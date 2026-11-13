@@ -1,11 +1,13 @@
+from typing import TYPE_CHECKING, Annotated
+
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Annotated, List, Optional, TYPE_CHECKING
+
 from src.backend.models.users import Role
 
 if TYPE_CHECKING:
-    from src.backend.schemas.properties_schemas import PropertiesResponse
     from src.backend.schemas.bookings_schemas import BookingResponse
     from src.backend.schemas.favorites_schemas import FavoriteResponse
+    from src.backend.schemas.properties_schemas import PropertiesResponse
     from src.backend.schemas.reviews_schemas import ReviewResponse
 
 
@@ -25,10 +27,10 @@ class UserRegister(UserBase):
 
 
 class UserUpdate(BaseModel):
-    email: Annotated[Optional[str], Field(min_length=1)] = None
-    username: Annotated[Optional[str], Field(min_length=1)] = None
-    phone_number: Annotated[Optional[str], Field(min_length=1)] = None
-    password: Annotated[Optional[str], Field(min_length=1)] = None
+    email: Annotated[str | None, Field(min_length=1)] = None
+    username: Annotated[str | None, Field(min_length=1)] = None
+    phone_number: Annotated[str | None, Field(min_length=1)] = None
+    password: Annotated[str | None, Field(min_length=1)] = None
 
 
 class UserResponse(UserBase):
@@ -43,7 +45,7 @@ class UserInDB(UserBase):
 
 
 class UserFullResponse(UserResponse):
-    properties: List["PropertiesResponse"] = []
-    bookings: List["BookingResponse"] = []
-    favorites: List["FavoriteResponse"] = []
-    reviews: List["ReviewResponse"] = []
+    properties: list[PropertiesResponse] = []
+    bookings: list[BookingResponse] = []
+    favorites: list[FavoriteResponse] = []
+    reviews: list[ReviewResponse] = []

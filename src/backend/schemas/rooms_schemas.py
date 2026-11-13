@@ -1,7 +1,9 @@
+from typing import Annotated
+
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Annotated, Optional, List
-from src.backend.schemas.amenities_schemas import AmenityResponse
+
 from src.backend.models.rooms import RoomType
+from src.backend.schemas.amenities_schemas import AmenityResponse
 
 
 class RoomBase(BaseModel):
@@ -13,15 +15,15 @@ class RoomBase(BaseModel):
 
 class RoomCreate(RoomBase):
     property_id: int
-    amenities: List[AmenityResponse] = Field(default_factory=list)
+    amenities: list[AmenityResponse] = Field(default_factory=list)
 
 
 class RoomUpdate(BaseModel):
     room_id: int
-    name: Annotated[Optional[str], Field(min_length=1)] = None
-    price: Annotated[Optional[float], Field(gt=0)] = None
-    capacity: Annotated[Optional[int], Field(gt=0)] = None
-    amenities: Annotated[Optional[AmenityResponse], Field()] = None
+    name: Annotated[str | None, Field(min_length=1)] = None
+    price: Annotated[float | None, Field(gt=0)] = None
+    capacity: Annotated[int | None, Field(gt=0)] = None
+    amenities: Annotated[AmenityResponse | None, Field()] = None
 
 
 class RoomResponse(RoomBase):
@@ -29,4 +31,4 @@ class RoomResponse(RoomBase):
 
     room_id: int
     property_id: int
-    amenities: List[AmenityResponse] = Field(default_factory=list)
+    amenities: list[AmenityResponse] = Field(default_factory=list)

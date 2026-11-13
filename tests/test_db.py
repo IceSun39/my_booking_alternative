@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine
+
 from src.backend.database import Base
 
 engine = create_engine("sqlite:///test_database.db", echo=True)

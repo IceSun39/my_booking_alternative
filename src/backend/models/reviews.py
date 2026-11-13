@@ -1,14 +1,15 @@
-from typing import TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import ForeignKey, Integer, Text, CheckConstraint, DateTime, func
+from typing import TYPE_CHECKING
+
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.backend.database import Base
 
 if TYPE_CHECKING:
-    from .users import User
-    from .properties import Property
     from .bookings import Booking
+    from .properties import Property
+    from .users import User
 
 
 class Review(Base):
@@ -25,6 +26,6 @@ class Review(Base):
 
     booking_id: Mapped[int] = mapped_column(ForeignKey("bookings.booking_id"), unique=True)
 
-    user: Mapped["User"] = relationship(back_populates="reviews")
-    property: Mapped["Property"] = relationship(back_populates="reviews")
-    booking: Mapped["Booking"] = relationship(back_populates="review")
+    user: Mapped[User] = relationship(back_populates="reviews")
+    property: Mapped[Property] = relationship(back_populates="reviews")
+    booking: Mapped[Booking] = relationship(back_populates="review")

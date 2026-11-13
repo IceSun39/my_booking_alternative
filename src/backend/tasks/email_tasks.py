@@ -1,11 +1,11 @@
+import logging
+import os
 import smtplib
 import ssl
-import os
-import socket
-import logging
+from email.message import EmailMessage
 
 from dotenv import load_dotenv
-from email.message import EmailMessage
+
 from src.backend.core.celery_app import celery
 
 load_dotenv()
@@ -45,7 +45,7 @@ def send_email(self, subject, message, message_html, from_email, to_email, **kwa
         logger.error(f"Recipients address refused: ({to_email}): {e}")
         raise e
 
-    except (smtplib.SMTPConnectError, smtplib.SMTPServerDisconnected, socket.error, TimeoutError) as e:
+    except (OSError, smtplib.SMTPConnectError, smtplib.SMTPServerDisconnected, TimeoutError) as e:
         logger.warning(f"Connection error SMTP. Retry... Details: {e}")
         raise self.retry(exc=e)
 

@@ -1,16 +1,15 @@
-from typing import Optional
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from fastapi import HTTPException
 
-from src.backend.models import Room, Property
-from src.backend.schemas.rooms_schemas import RoomResponse, RoomCreate, RoomUpdate
+from src.backend.models import Property, Room
+from src.backend.schemas.rooms_schemas import RoomCreate, RoomResponse, RoomUpdate
 
 
 class RoomService:
-    async def _get_room_in_db(self, session: AsyncSession, room_id: int) -> Optional[Room]:
+    async def _get_room_in_db(self, session: AsyncSession, room_id: int) -> Room | None:
         stmt = select(Room).where(Room.room_id == room_id).options(selectinload(Room.amenities))
         result = await session.execute(stmt)
         room = result.scalar_one_or_none()
@@ -85,4 +84,3 @@ class RoomService:
         await session.delete(existing_room)
         await session.commit()
 
-        return None

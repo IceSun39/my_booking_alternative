@@ -1,16 +1,15 @@
-from typing import Optional
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
 
-from src.backend.models.users import User, Role
-from src.backend.schemas.users_schemas import UserUpdate, UserResponse, UserRegister
 from src.backend.core.security import get_password_hash
+from src.backend.models.users import Role, User
+from src.backend.schemas.users_schemas import UserRegister, UserResponse, UserUpdate
 
 
 class UserService:
-    async def _get_user_in_db(self, session: AsyncSession, user_id: int) -> Optional[User]:
+    async def _get_user_in_db(self, session: AsyncSession, user_id: int) -> User | None:
         stmt = select(User).where(User.user_id == user_id)
         result = await session.execute(stmt)
         user = result.scalar_one_or_none()
@@ -64,9 +63,8 @@ class UserService:
         await session.delete(existing_user)
         await session.commit()
 
-        return None
 
-    async def get_user_by_email(self, session: AsyncSession, email: str) -> Optional[User]:
+    async def get_user_by_email(self, session: AsyncSession, email: str) -> User | None:
         stmt = select(User).where(User.email == email)
         result = await session.execute(stmt)
 

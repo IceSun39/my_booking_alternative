@@ -1,5 +1,6 @@
+from typing import Annotated
+
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Annotated, Optional
 
 
 class PropertiesBase(BaseModel):
@@ -14,12 +15,12 @@ class PropertiesCreate(PropertiesBase):
     owner_id: int
 
 class PropertiesUpdate(BaseModel):
-    name: Annotated[Optional[str], Field(min_length=1)] = None
-    country: Annotated[Optional[str], Field(min_length=1)] = None
-    city: Annotated[Optional[str], Field(min_length=1)] = None
-    street: Annotated[Optional[str], Field(min_length=1)] = None
-    house_number: Annotated[Optional[str], Field(min_length=1)] = None
-    description: Annotated[Optional[str], Field(min_length=1)] = None
+    name: Annotated[str | None, Field(min_length=1)] = None
+    country: Annotated[str | None, Field(min_length=1)] = None
+    city: Annotated[str | None, Field(min_length=1)] = None
+    street: Annotated[str | None, Field(min_length=1)] = None
+    house_number: Annotated[str | None, Field(min_length=1)] = None
+    description: Annotated[str | None, Field(min_length=1)] = None
 
 class PropertiesResponse(PropertiesBase):
     model_config = ConfigDict(from_attributes=True)

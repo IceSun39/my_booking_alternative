@@ -1,15 +1,19 @@
-from src.backend.models.rooms import RoomType
-from typing import Optional, List
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
-from fastapi import HTTPException, status
-
-from src.backend.models import Booking, Room, BookingStatus
-from src.backend.schemas.bookings_schemas import BookingCreate, BookingUpdate, BookingResponse, BookingBase
-from src.backend.services.rooms_services import RoomService
 from datetime import date
+
+from fastapi import HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.backend.models import Booking, BookingStatus, Room
+from src.backend.models.rooms import RoomType
+from src.backend.schemas.bookings_schemas import (
+    BookingBase,
+    BookingCreate,
+    BookingResponse,
+    BookingUpdate,
+)
+from src.backend.services.rooms_services import RoomService
 
 room_service = RoomService()
 
@@ -26,7 +30,7 @@ class BookingService:
             self,
             session: AsyncSession,
             booking_id: int
-    ) -> Optional[Booking]:
+    ) -> Booking | None:
         """Helper method for getting booking by id"""
         stmt = select(Booking).where(Booking.booking_id == booking_id)
         result = await session.execute(stmt)
@@ -65,8 +69,8 @@ class BookingService:
             room_id: int,
             check_in: date,
             check_out: date,
-            exclude_booking_id: Optional[int] = None
-    ) -> List[Booking]:
+            exclude_booking_id: int | None = None
+    ) -> list[Booking]:
         """Method finds all bookings there cross dates"""
         # Basic statement
         stmt = select(Booking).where(
@@ -89,7 +93,7 @@ class BookingService:
             session: AsyncSession,
             booking: BookingBase,
             room: Room,
-            exclude_booking_id: Optional[int] = None
+            exclude_booking_id: int | None = None
     ) -> bool:
         """Method checks whether there are any available places in the room"""
         bookings = await self._find_all_bookings_for_room(session, room.room_id, booking.check_in, booking.check_out,
@@ -125,7 +129,7 @@ class BookingService:
             session: AsyncSession,
             booking: BookingBase,
             room: Room,
-            exclude_booking_id: Optional[int] = None
+            exclude_booking_id: int | None = None
     ) -> bool:
         """Methods checks whether the room is available on the specified dates"""
         bookings = await self._find_all_bookings_for_room(session, room.room_id, booking.check_in, booking.check_out,
@@ -141,7 +145,7 @@ class BookingService:
             session: AsyncSession,
             booking: BookingBase,
             room: Room,
-            exclude_booking_id: Optional[int] = None
+            exclude_booking_id: int | None = None
     ) -> bool:
         """Checks to see if the recording room is available"""
 
@@ -154,7 +158,7 @@ class BookingService:
             self,
             session: AsyncSession,
             booking_id: int
-    ) -> Optional[BookingResponse]:
+    ) -> BookingResponse | None:
         """Return booking response model by id"""
         booking = await self._get_booking_in_db(session, booking_id)
         return BookingResponse.model_validate(booking)
@@ -163,7 +167,7 @@ class BookingService:
             self,
             session: AsyncSession,
             user_id: int
-    ) -> List[BookingResponse]:
+    ) -> list[BookingResponse]:
         """Return all user's bookings"""
         stmt = select(Booking).where(Booking.user_id == user_id)
         result = await session.execute(stmt)
@@ -242,7 +246,7 @@ class BookingService:
             session: AsyncSession,
             booking_update: BookingUpdate,
             booking_id: int
-    ) -> Optional[BookingResponse]:
+    ) -> BookingResponse | None:
         """Updates booking by id"""
 
         existing_booking = await self._get_booking_in_db(session, booking_id)
@@ -318,4 +322,3 @@ class BookingService:
         await session.delete(booking)
         await session.commit()
 
-        return None

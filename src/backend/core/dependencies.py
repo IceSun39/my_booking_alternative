@@ -1,12 +1,12 @@
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from starlette import status
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
 
-from src.backend.database.database import get_session
 from src.backend.core.security import decode_token
+from src.backend.database.database import get_session
+from src.backend.models.users import Role, User
 from src.backend.services.user_services import UserService
-from src.backend.models.users import User, Role
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 

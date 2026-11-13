@@ -1,16 +1,17 @@
-from src.backend.models import Amenity
-from src.backend.models import Property, Room, Booking
-from sqlalchemy import select, and_, exists
+
+from sqlalchemy import and_, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.backend.models import Amenity, Booking, Property, Room
 from src.backend.schemas.search_schemas import SearchFilter, SortBy
-from typing import List
+
 
 class SearchServices:
     @staticmethod
     async def find_available_properties(
             session: AsyncSession,
             filters: SearchFilter,
-    ) -> List[Property]:
+    ) -> list[Property]:
         # Take all properties with all rooms
         stmt = select(Property).join(Property.rooms)
 

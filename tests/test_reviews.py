@@ -1,14 +1,14 @@
-import pytest
 import datetime
-from src.backend.models import RoomType
+
+import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 
-from src.backend.main import app
-from tests.conftest import TestingSessionLocal
-from src.backend.models import User, Role, Property, Room, Booking, Review
-from src.backend.models.bookings import BookingStatus
 from src.backend.core.dependencies import get_current_user
+from src.backend.main import app
+from src.backend.models import Booking, Property, Review, Role, Room, RoomType, User
+from src.backend.models.bookings import BookingStatus
+from tests.conftest import TestingSessionLocal
 
 
 @pytest.fixture

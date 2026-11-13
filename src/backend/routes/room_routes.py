@@ -1,12 +1,11 @@
-from src.backend.models import User
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.backend.services.rooms_services import RoomService
-from src.backend.models import Role
-from src.backend.schemas.rooms_schemas import RoomResponse, RoomCreate, RoomUpdate
-from src.backend.database.database import get_session
 from src.backend.core.dependencies import get_current_user, get_owner_or_admin_user
+from src.backend.database.database import get_session
+from src.backend.models import User
+from src.backend.schemas.rooms_schemas import RoomCreate, RoomResponse, RoomUpdate
+from src.backend.services.rooms_services import RoomService
 
 room_router = APIRouter(
     prefix="/api/rooms",

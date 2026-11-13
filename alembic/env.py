@@ -8,16 +8,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-
 from src.backend.database.database import Base
-from src.backend.models.reviews import Review
-from src.backend.models.bookings import Booking
-from src.backend.models.rooms import Room
-from src.backend.models.favorites import Favorite
-from src.backend.models.users import User
-from src.backend.models.properties import Property
-from src.backend.models.amenities import Amenity
-from src.backend.models.associations.room_amenities import room_amenities
 
 load_dotenv()
 

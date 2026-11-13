@@ -1,16 +1,19 @@
-from sqlalchemy.orm import selectinload
-from typing import Optional, List
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
+from sqlalchemy.orm import selectinload
 
-from src.backend.models import Property, User, Role
-from src.backend.schemas.properties_schemas import PropertiesCreate, PropertiesUpdate, PropertiesResponse
+from src.backend.models import Property, Role, User
+from src.backend.schemas.properties_schemas import (
+    PropertiesCreate,
+    PropertiesResponse,
+    PropertiesUpdate,
+)
 
 
 class PropertyService:
-    async def _get_property_in_db(self, session: AsyncSession, property_id: int) -> Optional[Property]:
+    async def _get_property_in_db(self, session: AsyncSession, property_id: int) -> Property | None:
         stmt = select(Property).where(Property.property_id == property_id).options(selectinload(Property.amenities))
         result = await session.execute(stmt)
         property = result.scalar_one_or_none()
@@ -19,7 +22,7 @@ class PropertyService:
             raise HTTPException(status_code=404, detail="Property not found")
         return property
 
-    async def get_all_properties(self, session: AsyncSession) -> List[Property]:
+    async def get_all_properties(self, session: AsyncSession) -> list[Property]:
         stmt = select(Property).options(selectinload(Property.amenities))
         result = await session.execute(stmt)
         property = result.scalars().all()
@@ -70,4 +73,3 @@ class PropertyService:
         await session.delete(existing_property)
         await session.commit()
 
-        return None

@@ -1,14 +1,14 @@
+
+from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException, status
-from typing import Optional, List
 
 from src.backend.models.favorites import Favorite
 from src.backend.schemas.favorites_schemas import FavoriteCreate
 
 
 class FavoriteService:
-    async def _get_favorite_in_db(self, session: AsyncSession, user_id: int, property_id: int) -> Optional[Favorite]:
+    async def _get_favorite_in_db(self, session: AsyncSession, user_id: int, property_id: int) -> Favorite | None:
         stmt = select(Favorite).where(
             Favorite.user_id == user_id,
             Favorite.property_id == property_id
@@ -16,7 +16,7 @@ class FavoriteService:
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_users_favorites(self, session: AsyncSession, user_id: int) -> List[Favorite]:
+    async def get_users_favorites(self, session: AsyncSession, user_id: int) -> list[Favorite]:
         stmt = select(Favorite).where(Favorite.user_id == user_id)
         result = await session.execute(stmt)
         return result.scalars().all()

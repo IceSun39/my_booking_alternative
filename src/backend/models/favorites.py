@@ -1,13 +1,14 @@
 from typing import TYPE_CHECKING
+
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.backend.database import Base
 
 if TYPE_CHECKING:
-    from .users import User
     from .properties import Property
     from .rooms import Room
+    from .users import User
 
 class Favorite(Base):
     __tablename__ = "favorites"
@@ -16,6 +17,6 @@ class Favorite(Base):
     property_id: Mapped[int] = mapped_column(ForeignKey("properties.property_id"), primary_key=True)
     room_id: Mapped[int] = mapped_column(ForeignKey("rooms.room_id"), nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="favorites")
-    property: Mapped["Property"] = relationship(back_populates="favorites")
-    room: Mapped["Room"] = relationship(back_populates="favorites")
+    user: Mapped[User] = relationship(back_populates="favorites")
+    property: Mapped[Property] = relationship(back_populates="favorites")
+    room: Mapped[Room] = relationship(back_populates="favorites")

@@ -1,13 +1,17 @@
-from src.backend.models import Booking
-from fastapi import APIRouter, Depends, status, Path, Body, HTTPException
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
 
-from src.backend.database.database import get_session
 from src.backend.core.dependencies import get_current_user
+from src.backend.database.database import get_session
+from src.backend.models import Booking
 from src.backend.models.users import User
-from src.backend.schemas.bookings_schemas import BookingCreate, BookingUpdate, BookingResponse
+from src.backend.schemas.bookings_schemas import (
+    BookingCreate,
+    BookingResponse,
+    BookingUpdate,
+)
 from src.backend.services.booking_services import BookingService
 from src.backend.tasks.email_tasks import send_email
 
@@ -36,7 +40,7 @@ async def check_user_owner_booking(
     return False
 
 
-@booking_router.get("/my_bookings", response_model=List[BookingResponse], status_code=status.HTTP_200_OK)
+@booking_router.get("/my_bookings", response_model=list[BookingResponse], status_code=status.HTTP_200_OK)
 async def my_bookings(
         current_user: User = Depends(get_current_user),
         session: AsyncSession = Depends(get_session)

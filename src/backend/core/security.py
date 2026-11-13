@@ -1,12 +1,12 @@
-from datetime import datetime, timedelta, timezone
+import logging
 import os
+import uuid
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from dotenv import load_dotenv
 from fastapi import HTTPException
 from pwdlib import PasswordHash
-import uuid
-import logging
 
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -24,7 +24,7 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(data: dict, expires_delta: timedelta = None, refresh: bool = False) -> str:
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(UTC) + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     to_encode.update({'jti': str(uuid.uuid4())})
     to_encode.update({'refresh': refresh})

@@ -1,12 +1,16 @@
-from src.backend.models import AmenityType
-from fastapi import APIRouter, Depends, status, Query, Path, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
 
-from src.backend.database.database import get_session
 from src.backend.core.dependencies import get_admin_user, get_owner_or_admin_user
-from src.backend.models.users import User, Role
-from src.backend.schemas.amenities_schemas import AmenityResponse, AmenityCreate, AmenityUpdate, AmenityAssign
+from src.backend.database.database import get_session
+from src.backend.models import AmenityType
+from src.backend.models.users import Role, User
+from src.backend.schemas.amenities_schemas import (
+    AmenityAssign,
+    AmenityCreate,
+    AmenityResponse,
+    AmenityUpdate,
+)
 from src.backend.services import AmenityServices, RoomService
 
 amenity_router = APIRouter(
@@ -28,7 +32,7 @@ amenity_services = AmenityServices()
 room_service = RoomService()
 
 
-@property_amenity_router.get("/", response_model=List[AmenityResponse], status_code=status.HTTP_200_OK)
+@property_amenity_router.get("/", response_model=list[AmenityResponse], status_code=status.HTTP_200_OK)
 async def get_property_amenities(
         property_id: int,
         session: AsyncSession = Depends(get_session)
@@ -37,7 +41,7 @@ async def get_property_amenities(
     return await amenity_services.get_property_amenities(session, property_id)
 
 
-@room_amenity_router.get("/", response_model=List[AmenityResponse], status_code=status.HTTP_200_OK)
+@room_amenity_router.get("/", response_model=list[AmenityResponse], status_code=status.HTTP_200_OK)
 async def get_room_amenities(
         room_id: int,
         session: AsyncSession = Depends(get_session)
@@ -46,9 +50,9 @@ async def get_room_amenities(
     return await amenity_services.get_room_amenities(session, room_id)
 
 
-@amenity_router.get("/", response_model=List[AmenityResponse], status_code=status.HTTP_200_OK)
+@amenity_router.get("/", response_model=list[AmenityResponse], status_code=status.HTTP_200_OK)
 async def get_amenities(
-        amenity_type: Optional[AmenityType] = Query(None),
+        amenity_type: AmenityType | None = Query(None),
         session: AsyncSession = Depends(get_session),
 ):
     """Get amenities"""
@@ -76,7 +80,7 @@ async def update_amenity(
     return await amenity_services.update_amenity(session, amenity_update, amenity_id)
 
 
-@property_amenity_router.put("/", response_model=List[AmenityResponse], status_code=status.HTTP_202_ACCEPTED)
+@property_amenity_router.put("/", response_model=list[AmenityResponse], status_code=status.HTTP_202_ACCEPTED)
 async def update_property_amenities(
         amenity_data: AmenityAssign,
         property_id: int = Path(..., ge=1),
@@ -102,7 +106,7 @@ async def update_property_amenities(
     )
 
 
-@room_amenity_router.put("/", response_model=List[AmenityResponse], status_code=status.HTTP_202_ACCEPTED)
+@room_amenity_router.put("/", response_model=list[AmenityResponse], status_code=status.HTTP_202_ACCEPTED)
 async def update_room_amenities(
         amenity_data: AmenityAssign,
         room_id: int = Path(..., ge=1),

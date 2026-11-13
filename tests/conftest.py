@@ -1,12 +1,10 @@
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import NullPool, text
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from src.backend.database.database import Base, get_session
 from src.backend.main import app
-from src.backend.database.database import get_session, Base
-from src.backend.models import Amenity, Booking, Favorite, Property, Review, Room, User
-from src.backend.models.associations import property_amenities, room_amenities
 
 SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://new_test_user:secure_password@localhost:5432/booking_test_db"
 

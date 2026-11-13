@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, Table, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, Table
+
 from src.backend.database.database import Base
 
 room_amenities = Table(

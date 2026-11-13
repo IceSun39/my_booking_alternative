@@ -1,7 +1,9 @@
 import os
-from backend.routes.search_services import search_router
+
 from dotenv import load_dotenv
 from fastapi import FastAPI
+
+from backend.routes.search_services import search_router
 from src.backend.routes import *
 
 load_dotenv()

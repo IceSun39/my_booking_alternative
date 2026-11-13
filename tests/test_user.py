@@ -1,11 +1,11 @@
 import pytest
 from httpx import AsyncClient
 
-from src.backend.main import app
-from tests.conftest import TestingSessionLocal
-from src.backend.models import User, Role
+from src.backend.core.dependencies import get_current_user
 from src.backend.core.security import get_password_hash
-from src.backend.core.dependencies import get_current_user, get_admin_user
+from src.backend.main import app
+from src.backend.models import Role, User
+from tests.conftest import TestingSessionLocal
 
 
 def override_user(user_id: int, role: Role, email: str = "x@test.com"):

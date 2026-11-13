@@ -1,16 +1,17 @@
-from typing import List, TYPE_CHECKING
-from sqlalchemy import String, ForeignKey, Float, Integer, CheckConstraint
+from typing import TYPE_CHECKING
+
+from sqlalchemy import CheckConstraint, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.backend.database import Base
 from src.backend.models.associations import property_amenities
 
 if TYPE_CHECKING:
-    from .users import User
-    from .rooms import Room
+    from .amenities import Amenity
     from .favorites import Favorite
     from .reviews import Review
-    from .amenities import Amenity
+    from .rooms import Room
+    from .users import User
 
 
 class Property(Base):
@@ -27,9 +28,9 @@ class Property(Base):
     rating: Mapped[float] = mapped_column(Float, CheckConstraint("rating >= 0 AND rating <= 10", name="check_rating_range_properties"), default=0.0)
     reviews_count: Mapped[int] = mapped_column(Integer, default=0)
 
-    owner: Mapped["User"] = relationship(back_populates="properties")
-    rooms: Mapped[List["Room"]] = relationship(back_populates="property")
-    favorites: Mapped[List["Favorite"]] = relationship(back_populates="property")
-    reviews: Mapped[List["Review"]] = relationship(back_populates="property")
-    amenities: Mapped[List["Amenity"]] = relationship("Amenity", secondary=property_amenities,
+    owner: Mapped[User] = relationship(back_populates="properties")
+    rooms: Mapped[list[Room]] = relationship(back_populates="property")
+    favorites: Mapped[list[Favorite]] = relationship(back_populates="property")
+    reviews: Mapped[list[Review]] = relationship(back_populates="property")
+    amenities: Mapped[list[Amenity]] = relationship("Amenity", secondary=property_amenities,
                                                       back_populates="properties")

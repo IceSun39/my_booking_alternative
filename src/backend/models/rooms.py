@@ -1,18 +1,18 @@
-from decimal import Decimal
 import enum
+from decimal import Decimal
+from typing import TYPE_CHECKING
 
-from typing import List, TYPE_CHECKING
-from sqlalchemy import String, ForeignKey, Integer, Boolean, Numeric, Enum
+from sqlalchemy import Enum, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.backend.database import Base
 from src.backend.models.associations.room_amenities import room_amenities
 
 if TYPE_CHECKING:
-    from .properties import Property
+    from .amenities import Amenity
     from .bookings import Booking
     from .favorites import Favorite
-    from .amenities import Amenity
+    from .properties import Property
 
 
 class RoomType(enum.Enum):
@@ -35,7 +35,7 @@ class Room(Base):
         default=RoomType.PRIVATE,
     )
 
-    property: Mapped["Property"] = relationship(back_populates="rooms")
-    bookings: Mapped[List["Booking"]] = relationship(back_populates="room")
-    favorites: Mapped[List["Favorite"]] = relationship(back_populates="room")
-    amenities: Mapped[List["Amenity"]] = relationship(secondary=room_amenities, back_populates="rooms")
+    property: Mapped[Property] = relationship(back_populates="rooms")
+    bookings: Mapped[list[Booking]] = relationship(back_populates="room")
+    favorites: Mapped[list[Favorite]] = relationship(back_populates="room")
+    amenities: Mapped[list[Amenity]] = relationship(secondary=room_amenities, back_populates="rooms")

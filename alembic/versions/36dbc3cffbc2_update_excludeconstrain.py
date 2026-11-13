@@ -5,17 +5,17 @@ Revises: 31f8ef823b7a
 Create Date: 2026-08-25 19:34:31.973814
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = '36dbc3cffbc2'
-down_revision: Union[str, Sequence[str], None] = '31f8ef823b7a'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = '31f8ef823b7a'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

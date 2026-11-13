@@ -1,18 +1,19 @@
+import enum
+from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
-from datetime import date
-from sqlalchemy import ForeignKey, Integer, Date, Enum, Numeric, text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from sqlalchemy import Date, Enum, ForeignKey, Integer, Numeric, text
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
-import enum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.backend.database import Base
 from src.backend.models.rooms import RoomType
 
 if TYPE_CHECKING:
-    from .users import User
-    from .rooms import Room
     from .reviews import Review
+    from .rooms import Room
+    from .users import User
 
 
 class BookingStatus(str, enum.Enum):
@@ -53,7 +54,7 @@ class Booking(Base):
         ),
     )
 
-    user: Mapped["User"] = relationship(back_populates="bookings")
-    room: Mapped["Room"] = relationship(back_populates="bookings")
+    user: Mapped[User] = relationship(back_populates="bookings")
+    room: Mapped[Room] = relationship(back_populates="bookings")
 
-    review: Mapped["Review"] = relationship(back_populates="booking")
+    review: Mapped[Review] = relationship(back_populates="booking")

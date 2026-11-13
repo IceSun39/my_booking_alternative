@@ -1,12 +1,15 @@
-from fastapi import HTTPException
-from typing import Optional, List
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.backend.models import Amenity, Property, Room, AmenityType
-from src.backend.schemas.amenities_schemas import AmenityResponse, AmenityCreate, AmenityUpdate
+from src.backend.models import Amenity, AmenityType, Property, Room
+from src.backend.schemas.amenities_schemas import (
+    AmenityCreate,
+    AmenityResponse,
+    AmenityUpdate,
+)
 
 
 class AmenityServices:
@@ -14,7 +17,7 @@ class AmenityServices:
             self,
             session: AsyncSession,
             amenity_id: int
-    ) -> Optional[Amenity]:
+    ) -> Amenity | None:
         """Helper method to get amenity item by id"""
         stmt = select(Amenity).where(Amenity.amenity_id == amenity_id).options(selectinload(Amenity.rooms),
                                                                                selectinload(Amenity.properties))
@@ -29,7 +32,7 @@ class AmenityServices:
             self,
             session: AsyncSession,
             property_id: int
-    ) -> List[AmenityResponse]:
+    ) -> list[AmenityResponse]:
         """Get all amenities associated with a property"""
         stmt = select(Amenity).join(Amenity.properties).where(Property.property_id == property_id)
         result = await session.execute(stmt)
@@ -41,7 +44,7 @@ class AmenityServices:
             self,
             session: AsyncSession,
             room_id: int
-    ) -> List[AmenityResponse]:
+    ) -> list[AmenityResponse]:
         """Get all amenities associated with a room"""
         stmt = select(Amenity).join(Amenity.rooms).where(Room.room_id == room_id).options(selectinload(Room.amenities))
         result = await session.execute(stmt)
@@ -52,8 +55,8 @@ class AmenityServices:
     async def get_all_amenities(
             self,
             session: AsyncSession,
-            amenity_type: Optional[AmenityType] = None
-    ) -> List[AmenityResponse]:
+            amenity_type: AmenityType | None = None
+    ) -> list[AmenityResponse]:
         """Get all amenities"""
         stmt = select(Amenity).options(selectinload(Amenity.properties))
 
@@ -108,9 +111,9 @@ class AmenityServices:
     async def update_property_amenities(
             self,
             property_id,
-            amenity_ids: List[int],
+            amenity_ids: list[int],
             session: AsyncSession
-    ) -> List[AmenityResponse]:
+    ) -> list[AmenityResponse]:
         """Update amenities for a property"""
         stmt_prop = select(Property).where(Property.property_id == property_id).options(
             selectinload(Property.amenities))
@@ -142,9 +145,9 @@ class AmenityServices:
     async def update_room_amenities(
             self,
             room_id,
-            amenity_ids: List[int],
+            amenity_ids: list[int],
             session: AsyncSession
-    ) -> List[AmenityResponse]:
+    ) -> list[AmenityResponse]:
         """Update amenities for a room"""
         stmt_room = select(Room).where(Room.room_id == room_id).options(selectinload(Room.amenities))
         result_room = await session.execute(stmt_room)
@@ -182,4 +185,3 @@ class AmenityServices:
         await session.delete(existing_amenity)
         await session.commit()
 
-        return None

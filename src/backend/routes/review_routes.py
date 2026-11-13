@@ -1,14 +1,17 @@
 import datetime
 
-from src.backend.models import User
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.backend.services import ReviewService, BookingService
-from src.backend.schemas.reviews_schemas import ReviewUpdate, ReviewCreate, ReviewResponse
-from src.backend.database.database import get_session
 from src.backend.core.dependencies import get_current_user
-from typing import List
+from src.backend.database.database import get_session
+from src.backend.models import User
+from src.backend.schemas.reviews_schemas import (
+    ReviewCreate,
+    ReviewResponse,
+    ReviewUpdate,
+)
+from src.backend.services import BookingService, ReviewService
 
 review_property_router = APIRouter(
     prefix="/api/properties/{property_id}/reviews",
@@ -38,7 +41,7 @@ async def check_is_user_review_owner(
     return True
 
 
-@review_property_router.get("/", response_model=List[ReviewResponse])
+@review_property_router.get("/", response_model=list[ReviewResponse])
 async def get_property_reviews(
         property_id: int,
         session: AsyncSession = Depends(get_session),
@@ -47,7 +50,7 @@ async def get_property_reviews(
     return await review_service.get_property_reviews(session, property_id)
 
 
-@review_property_router.get("/{room_id}", response_model=List[ReviewResponse])
+@review_property_router.get("/{room_id}", response_model=list[ReviewResponse])
 async def get_room_review(
         room_id: int,
         session: AsyncSession = Depends(get_session),

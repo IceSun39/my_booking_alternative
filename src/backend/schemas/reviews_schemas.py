@@ -1,10 +1,11 @@
 from datetime import datetime
+from typing import Annotated
+
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Annotated, Optional
 
 
 class ReviewBase(BaseModel):
-    comment: Annotated[Optional[str], Field(default=None)] = None
+    comment: Annotated[str | None, Field(default=None)] = None
     rating: Annotated[int, Field(ge=1, le=10)]
 
 
@@ -13,8 +14,8 @@ class ReviewCreate(ReviewBase):
 
 
 class ReviewUpdate(BaseModel):
-    rating: Annotated[Optional[int], Field(ge=1, le=10)] = None
-    comment: Annotated[Optional[str], Field()] = None
+    rating: Annotated[int | None, Field(ge=1, le=10)] = None
+    comment: Annotated[str | None, Field()] = None
 
 
 class ReviewResponse(ReviewBase):

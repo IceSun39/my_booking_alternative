@@ -1,12 +1,16 @@
-from sqlalchemy.sql.functions import current_user
-from src.backend.models import User, Role
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.backend.core.dependencies import get_owner_or_admin_user
 from src.backend.database.database import get_session
-from src.backend.schemas.properties_schemas import PropertiesUpdate, PropertiesCreate, PropertiesResponse
+from src.backend.models import Role, User
+from src.backend.schemas.properties_schemas import (
+    PropertiesCreate,
+    PropertiesResponse,
+    PropertiesUpdate,
+)
 from src.backend.services import PropertyService
-from typing import List
 
 properties_router = APIRouter(
     prefix="/api/properties",
@@ -37,7 +41,7 @@ async def get_property_by_id(property_id: int, session: AsyncSession = Depends(g
     return await property_service.get_property(session=session, property_id=property_id)
 
 
-@properties_router.get("/", response_model=List[PropertiesResponse])
+@properties_router.get("/", response_model=list[PropertiesResponse])
 async def get_all_properties(session: AsyncSession = Depends(get_session)):
     """Отримати список всіх готелів"""
     return await property_service.get_all_properties(session=session)

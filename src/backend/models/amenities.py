@@ -1,8 +1,11 @@
-from sqlalchemy import String, Enum
+import enum
+
+from sqlalchemy import Enum, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.backend.database.database import Base
 from src.backend.models.associations import property_amenities, room_amenities
-import enum
+
 
 class AmenityType(enum.Enum):
     PROPERTY = "property"

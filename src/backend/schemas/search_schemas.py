@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Annotated, List, Optional
-from datetime import date
 import enum
+from datetime import date
+from typing import Annotated
+
+from pydantic import BaseModel, Field
 
 
 class SortBy(enum.Enum):
@@ -17,7 +18,7 @@ class SearchFilter(BaseModel):
     city: Annotated[str, Field(..., description="City")]
     guest: Annotated[int, Field(..., gt=0, description="Number of guests")]
 
-    min_price: Annotated[Optional[float], Field(default=None)] = None
-    max_price: Annotated[Optional[float], Field(default=None)] = None
-    amenities: Annotated[Optional[List[int]], Field(default=None)] = None
-    sort_by: Annotated[Optional[SortBy], Field(default=None)] = None
+    min_price: Annotated[float | None, Field(default=None)] = None
+    max_price: Annotated[float | None, Field(default=None)] = None
+    amenities: Annotated[list[int] | None, Field(default=None)] = None
+    sort_by: Annotated[SortBy | None, Field(default=None)] = None

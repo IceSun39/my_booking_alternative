@@ -1,16 +1,18 @@
-import pytest
 import asyncio
-from httpx import AsyncClient
-from unittest.mock import patch
 from datetime import date, timedelta
+from unittest.mock import patch
+
+import pytest
+from fastapi import HTTPException
+from httpx import AsyncClient
+
+from src.backend.core.dependencies import get_current_user
 from src.backend.main import app
-from tests.conftest import TestingSessionLocal
-from src.backend.models import User, Role, Property, Room, Booking, RoomType
+from src.backend.models import Booking, Property, Role, Room, RoomType, User
 from src.backend.models.bookings import BookingStatus
 from src.backend.schemas.bookings_schemas import BookingCreate
 from src.backend.services.booking_services import BookingService
-from src.backend.core.dependencies import get_current_user
-from fastapi import HTTPException
+from tests.conftest import TestingSessionLocal
 
 
 @pytest.fixture

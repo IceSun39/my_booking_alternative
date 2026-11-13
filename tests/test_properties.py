@@ -1,9 +1,10 @@
 import pytest
 from httpx import AsyncClient
-from src.backend.main import app
-from tests.conftest import TestingSessionLocal
-from src.backend.models import User, Role, Property
+
 from src.backend.core.dependencies import get_owner_or_admin_user
+from src.backend.main import app
+from src.backend.models import Property, Role, User
+from tests.conftest import TestingSessionLocal
 
 
 @pytest.fixture
