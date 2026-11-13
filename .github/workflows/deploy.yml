@@ -1,16 +1,20 @@
-name: CI/CD
+name: CI
 
 on:
   push:
     branches:
       - main
+
   pull_request:
     branches:
       - main
 
+permissions:
+  contents: read
+
 concurrency:
-  group: deploy-production
-  cancel-in-progress: false
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -50,48 +54,27 @@ jobs:
       ALGORITHM: "HS256"
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git init .
+          git remote add origin https://github.com/${GITHUB_REPOSITORY}.git
+    
+          AUTH=$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)
+    
+          git -c http.extraheader="AUTHORIZATION: basic $AUTH" \
+            fetch --no-tags --depth=1 origin "$GITHUB_REF"
+    
+          git checkout --detach FETCH_HEAD
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          enable-cache: true
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Install dependencies
         run: uv sync
 
       - name: Run tests
-        run: uv run pytest -v
-
-  deploy:
-    needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -e
-
-            cd /opt/my_booking_alternative
-
-            git fetch origin
-            git reset --hard origin/main
-
-            docker compose build
-            docker compose up -d --force-recreate
-
-            docker compose exec -T web uv run alembic upgrade head
-
-            docker image prune -f
-
-      - name: Health check
-        run: |
-          sleep 8
-          curl -f https://mybookingalternative.club/docs || exit 1
+        run: uv run pytest -vgiyt
