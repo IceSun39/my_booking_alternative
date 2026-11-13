@@ -51,5 +51,8 @@ jobs:
       - name: Setup project
         uses: ./.github/actions/setup_project
 
+      - name: Run Linter
+        uses: ./.github/actions/run_lint
+
       - name: Run tests
         uses: ./.github/actions/run_tests
